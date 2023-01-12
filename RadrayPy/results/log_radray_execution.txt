@@ -1,0 +1,145 @@
+-- 0 - Ray Track X(1151,1151) Y(1459,1459) Z(1220,0)
+-- Maximal Energy Value : 241.35 ev/Ang 
+-- Cube 0 Layer 3 DB Energy 320 KeV/ang Energy 89.05 eV/PartialCube Distributed Energy Percentage 0.30 Distributed Energy on Cube 0.01 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 110.00 ps
+-- Cube 3 Layer 5 DB Energy 330 KeV/ang Energy 43.67 eV/PartialCube Distributed Energy Percentage 0.40 Distributed Energy on Cube 0.01 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 100.00 ps
+-- Cube 39 Layer 11 DB Energy 320 KeV/ang Energy 642.96 eV/PartialCube Distributed Energy Percentage 1.10 Distributed Energy on Cube 0.23 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Total Distributed Energy on Cubes : 0.24 KeV/Cubes Maximal Peak 0.00000 [V] 
+-- Monte Carlo Delta 0.24 Monte Carlo Energy Value 0.24 
+-- 1 - Ray Track X(504,504) Y(956,956) Z(1220,0)
+-- Maximal Energy Value : 376.59 ev/Ang 
+-- Cube 0 Layer 3 DB Energy 320 KeV/ang Energy 332.71 eV/PartialCube Distributed Energy Percentage 0.70 Distributed Energy on Cube 0.07 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 110.00 ps
+-- Cube 3 Layer 5 DB Energy 330 KeV/ang Energy 349.76 eV/PartialCube Distributed Energy Percentage 1.10 Distributed Energy on Cube 0.13 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 100.00 ps
+-- Cube 5 Layer 1 DB Energy 290 KeV/ang Energy 1140.22 eV/PartialCube Distributed Energy Percentage 0.70 Distributed Energy on Cube 0.23 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 520.00 ps
+-- Cube 36 Layer 11 DB Energy 320 KeV/ang Energy 1223.94 eV/PartialCube Distributed Energy Percentage 1.10 Distributed Energy on Cube 0.43 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Total Distributed Energy on Cubes : 0.86 KeV/Cubes Maximal Peak 0.00000 [V] 
+-- Monte Carlo Delta 0.43 Monte Carlo Energy Value 0.55 
+-- 2 - Ray Track X(413,413) Y(1242,1242) Z(1220,0)
+-- Maximal Energy Value : 309.41 ev/Ang 
+-- Cube 0 Layer 3 DB Energy 320 KeV/ang Energy 200.12 eV/PartialCube Distributed Energy Percentage 0.40 Distributed Energy on Cube 0.03 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 110.00 ps
+-- Cube 3 Layer 5 DB Energy 330 KeV/ang Energy 94.41 eV/PartialCube Distributed Energy Percentage 0.40 Distributed Energy on Cube 0.01 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 100.00 ps
+-- Cube 5 Layer 1 DB Energy 290 KeV/ang Energy 635.82 eV/PartialCube Distributed Energy Percentage 0.60 Distributed Energy on Cube 0.11 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 520.00 ps
+-- Cube 7 Layer 9 DB Energy 320 KeV/ang Energy 21.81 eV/PartialCube Distributed Energy Percentage 0.40 Distributed Energy on Cube 0.00 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 150.00 ps
+-- Cube 36 Layer 11 DB Energy 320 KeV/ang Energy 173.17 eV/PartialCube Distributed Energy Percentage 0.50 Distributed Energy on Cube 0.03 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Cube 39 Layer 11 DB Energy 320 KeV/ang Energy 599.87 eV/PartialCube Distributed Energy Percentage 0.80 Distributed Energy on Cube 0.15 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Total Distributed Energy on Cubes : 0.33 KeV/Cubes Maximal Peak 0.00000 [V] 
+-- Monte Carlo Delta 0.11 Monte Carlo Energy Value 0.48 
+-- 3 - Ray Track X(1472,1472) Y(54,54) Z(1220,0)
+-- Maximal Energy Value : 40.97 ev/Ang 
+-- Cube 1 Layer 2 DB Energy 320 KeV/ang Energy 73.05 eV/PartialCube Distributed Energy Percentage 0.60 Distributed Energy on Cube 0.01 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 100.00 ps
+-- Total Distributed Energy on Cubes : 0.01 KeV/Cubes Maximal Peak 0.00000 [V] 
+-- Monte Carlo Delta 0.00 Monte Carlo Energy Value 0.36 
+-- 4 - Ray Track X(822,822) Y(150,150) Z(1220,0)
+-- Maximal Energy Value : 376.59 ev/Ang 
+-- Cube 1 Layer 2 DB Energy 320 KeV/ang Energy 277.00 eV/PartialCube Distributed Energy Percentage 0.60 Distributed Energy on Cube 0.05 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 100.00 ps
+-- Cube 2 Layer 4 DB Energy 290 KeV/ang Energy 44.08 eV/PartialCube Distributed Energy Percentage 0.60 Distributed Energy on Cube 0.01 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 20.00 ps
+-- Cube 4 Layer 1 DB Energy 290 KeV/ang Energy 516.06 eV/PartialCube Distributed Energy Percentage 0.60 Distributed Energy on Cube 0.09 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 520.00 ps
+-- Cube 9 Layer 9 DB Energy 320 KeV/ang Energy 127.39 eV/PartialCube Distributed Energy Percentage 0.20 Distributed Energy on Cube 0.01 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 150.00 ps
+-- Cube 38 Layer 11 DB Energy 320 KeV/ang Energy 631.38 eV/PartialCube Distributed Energy Percentage 1.20 Distributed Energy on Cube 0.24 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Total Distributed Energy on Cubes : 0.40 KeV/Cubes Maximal Peak 0.00000 [V] 
+-- Monte Carlo Delta 0.08 Monte Carlo Energy Value 0.37 
+-- 5 - Ray Track X(1542,1542) Y(1177,1177) Z(1220,0)
+-- Maximal Energy Value : 0.00 ev/Ang 
+-- Total Distributed Energy on Cubes : 0.00 KeV/Cubes Maximal Peak 0.00000 [V] 
+-- Monte Carlo Delta 0.00 Monte Carlo Energy Value 0.31 
+-- 6 - Ray Track X(953,953) Y(1537,1537) Z(1220,0)
+-- Maximal Energy Value : 195.94 ev/Ang 
+-- Cube 0 Layer 3 DB Energy 320 KeV/ang Energy 58.73 eV/PartialCube Distributed Energy Percentage 0.10 Distributed Energy on Cube 0.00 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 110.00 ps
+-- Cube 39 Layer 11 DB Energy 320 KeV/ang Energy 672.06 eV/PartialCube Distributed Energy Percentage 0.70 Distributed Energy on Cube 0.15 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Total Distributed Energy on Cubes : 0.15 KeV/Cubes Maximal Peak 0.00000 [V] 
+-- Monte Carlo Delta 0.02 Monte Carlo Energy Value 0.29 
+-- 7 - Ray Track X(569,569) Y(722,722) Z(1220,0)
+-- Maximal Energy Value : 247.03 ev/Ang 
+-- Cube 0 Layer 3 DB Energy 320 KeV/ang Energy 9.81 eV/PartialCube Distributed Energy Percentage 0.10 Distributed Energy on Cube 0.00 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 110.00 ps
+-- Cube 3 Layer 5 DB Energy 330 KeV/ang Energy 197.47 eV/PartialCube Distributed Energy Percentage 0.50 Distributed Energy on Cube 0.03 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 100.00 ps
+-- Cube 5 Layer 1 DB Energy 290 KeV/ang Energy 710.96 eV/PartialCube Distributed Energy Percentage 1.10 Distributed Energy on Cube 0.23 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 520.00 ps
+-- Cube 35 Layer 11 DB Energy 320 KeV/ang Energy 1496.88 eV/PartialCube Distributed Energy Percentage 2.70 Distributed Energy on Cube 1.29 KeV/Cube
+-- Cube Maximal Pulse 0.00005 Volts - Duration 250.00 ps
+-- Cube 36 Layer 11 DB Energy 320 KeV/ang Energy 560.12 eV/PartialCube Distributed Energy Percentage 1.10 Distributed Energy on Cube 0.20 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Total Distributed Energy on Cubes : 1.75 KeV/Cubes Maximal Peak 0.00005 [V] 
+-- Monte Carlo Delta 0.22 Monte Carlo Energy Value 0.47 
+-- 8 - Ray Track X(699,699) Y(1256,1256) Z(1220,0)
+-- Maximal Energy Value : 210.02 ev/Ang 
+-- Cube 0 Layer 3 DB Energy 320 KeV/ang Energy 316.68 eV/PartialCube Distributed Energy Percentage 0.70 Distributed Energy on Cube 0.07 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 110.00 ps
+-- Cube 3 Layer 5 DB Energy 330 KeV/ang Energy 119.99 eV/PartialCube Distributed Energy Percentage 0.20 Distributed Energy on Cube 0.01 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 100.00 ps
+-- Cube 5 Layer 1 DB Energy 290 KeV/ang Energy 92.74 eV/PartialCube Distributed Energy Percentage 0.50 Distributed Energy on Cube 0.01 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 520.00 ps
+-- Cube 9 Layer 9 DB Energy 320 KeV/ang Energy 548.04 eV/PartialCube Distributed Energy Percentage 1.50 Distributed Energy on Cube 0.26 KeV/Cube
+-- Cube Maximal Pulse 0.00001 Volts - Duration 150.00 ps
+-- Cube 36 Layer 11 DB Energy 320 KeV/ang Energy 353.17 eV/PartialCube Distributed Energy Percentage 0.60 Distributed Energy on Cube 0.07 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Cube 39 Layer 11 DB Energy 320 KeV/ang Energy 967.78 eV/PartialCube Distributed Energy Percentage 1.60 Distributed Energy on Cube 0.50 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Total Distributed Energy on Cubes : 0.92 KeV/Cubes Maximal Peak 0.00001 [V] 
+-- Monte Carlo Delta 0.10 Monte Carlo Energy Value 0.52 
+-- 9 - Ray Track X(304,304) Y(415,415) Z(1220,0)
+-- Maximal Energy Value : 463.76 ev/Ang 
+-- Cube 1 Layer 2 DB Energy 320 KeV/ang Energy 171.03 eV/PartialCube Distributed Energy Percentage 0.50 Distributed Energy on Cube 0.03 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 100.00 ps
+-- Cube 2 Layer 4 DB Energy 290 KeV/ang Energy 21.69 eV/PartialCube Distributed Energy Percentage 0.40 Distributed Energy on Cube 0.00 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 20.00 ps
+-- Cube 4 Layer 1 DB Energy 290 KeV/ang Energy 716.22 eV/PartialCube Distributed Energy Percentage 0.70 Distributed Energy on Cube 0.15 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 520.00 ps
+-- Cube 36 Layer 11 DB Energy 320 KeV/ang Energy 1179.33 eV/PartialCube Distributed Energy Percentage 1.40 Distributed Energy on Cube 0.53 KeV/Cube
+-- Cube Maximal Pulse 0.00000 Volts - Duration 250.00 ps
+-- Total Distributed Energy on Cubes : 0.70 KeV/Cubes Maximal Peak 0.00000 [V] 
+-- Monte Carlo Delta 0.07 Monte Carlo Energy Value 0.54 
+-- Narrow Amp Pulses 
+10
+0
+0
+0
+0
+0
+0
+0
+0
+0
+-- Middle Amp Pulses 
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+-- Large Amp Pulses 
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0

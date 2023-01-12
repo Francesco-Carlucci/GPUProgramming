@@ -55,7 +55,7 @@ if len (sys.argv) != 9:
             
 	
 	
-	exit()
+	#exit()
 
 #Initialization
 cnt = 0
