@@ -81,7 +81,7 @@ layers_cube, layer_list, vertex_cube_list = read_gds(sys.argv[1])
 
 print('-- Generating Layers Cube ')
 
-generate_cubes(vertex_cube_list, ax_1)
+generate_cubes(vertex_cube_list, ax_1,'output.txt')
 
 plt.show()
 
@@ -188,8 +188,8 @@ if sys.argv[8] == 'Y':
 
 
 i_ray = 0
-index_cube = 0
-for item in layer_list:
+index_cube = 0     #indice della boundary che sta valutando
+for item in layer_list:  #numero del layer della boundary corrente
     #print ('The Current Layer is:',item)
     #print ('Cube ', index_cube, ' Vertices: ', vertex_cube_list[index_cube])
     n = 0

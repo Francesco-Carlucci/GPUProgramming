@@ -105,43 +105,81 @@ def read_gds(path):
     
     return layers_cube, layer_list, vertex_cube_list
 
-def generate_cubes(vertex_cube_list, ax_1):
+def generate_cubes(vertex_cube_list, ax_1,file_coord):
     index_cube = 0
-    for item in layer_list:
-        #print ('The Current Layer is:',item)
-        #print ('-- Cube ', index_cube, ' Vertices: ', vertex_cube_list[index_cube])
-        cube_layer_id[index_cube] = item
-        n = 0
-        xline_1 = []
-        yline_1 = []
-        zline_1 = []
-        xline_2 = []
-        yline_2 = []
-        zline_2 = []
-        #tlinex = []
-        while n < vertex_cube_list[index_cube]:
-            #print (n, ' - vertex: ',layers_cube[item][index_cube][n])
+    with open(file_coord, 'w') as writer:
+        for item in layer_list:
+            #print ('The Current Layer is:',item)
+            #print ('-- Cube ', index_cube, ' Vertices: ', vertex_cube_list[index_cube])
+            cube_layer_id[index_cube] = item
+            n = 0
+            xline_1 = []
+            yline_1 = []
+            zline_1 = []
+            xline_2 = []
+            yline_2 = []
+            zline_2 = []
             #tlinex = []
-            #tliney = []
-            #tlinez = []
-            xline_1.append(layers_cube[item][index_cube][n][0])
-            yline_1.append(layers_cube[item][index_cube][n][1])
-            zline_1.append(layers_cube[item][index_cube][n][2])
-            xline_2.append(layers_cube[item][index_cube][n][3])
-            yline_2.append(layers_cube[item][index_cube][n][4])
-            zline_2.append(layers_cube[item][index_cube][n][5])
-            #tlinex.append(layers_cube[item][index_cube][n][0])
-            #tliney.append(layers_cube[item][index_cube][n][1])
-            #tlinez.append(layers_cube[item][index_cube][n][2])
-            #tlinex.append(layers_cube[item][index_cube][n][3])
-            #tliney.append(layers_cube[item][index_cube][n][4])
-            #tlinez.append(layers_cube[item][index_cube][n][5])
-            ax_1.plot3D([xline_1[n],xline_2[n]], [yline_1[n],yline_2[n]], [zline_1[n],zline_2[n]], 'gray')  #'gray'
-            n = n + 1
-            #ax_1.plot3D(tlinex, tliney, tlinez, 'gray')  #'gray'
-        ax_1.plot3D(xline_1, yline_1, zline_1, 'blue')
-        ax_1.plot3D(xline_2, yline_2, zline_2, 'blue')  
-        n = 0
-        index_cube = index_cube + 1
-        #d = input()
+            while n < vertex_cube_list[index_cube]:
+                #print (n, ' - vertex: ',layers_cube[item][index_cube][n])
+                #tlinex = []
+                #tliney = []
+                #tlinez = []
+                xline_1.append(layers_cube[item][index_cube][n][0])
+                yline_1.append(layers_cube[item][index_cube][n][1])
+                zline_1.append(layers_cube[item][index_cube][n][2])
+                xline_2.append(layers_cube[item][index_cube][n][3])
+                yline_2.append(layers_cube[item][index_cube][n][4])
+                zline_2.append(layers_cube[item][index_cube][n][5])
+                #tlinex.append(layers_cube[item][index_cube][n][0])
+                #tliney.append(layers_cube[item][index_cube][n][1])
+                #tlinez.append(layers_cube[item][index_cube][n][2])
+                #tlinex.append(layers_cube[item][index_cube][n][3])
+                #tliney.append(layers_cube[item][index_cube][n][4])
+                #tlinez.append(layers_cube[item][index_cube][n][5])
+                ax_1.plot3D([xline_1[n],xline_2[n]], [yline_1[n],yline_2[n]], [zline_1[n],zline_2[n]], 'gray')  #'gray'
+                n = n + 1
+                #ax_1.plot3D(tlinex, tliney, tlinez, 'gray')  #'gray'
+                #','.join([str(_) for _ in xline_1])+'\n'
+            
+            #writer.write(str(len(xline_1))+'\n')
+            #writer.write(','.join([str(_) for _ in xline_1])+'\n')
+            #writer.write(','.join([str(_) for _ in xline_2])+'\n')
+            #writer.write(','.join([str(_) for _ in yline_1])+'\n')
+            #writer.write(','.join([str(_) for _ in yline_2])+'\n')
+            #writer.write(','.join([str(_) for _ in zline_1])+'\n')
+            #writer.write(','.join([str(_) for _ in zline_2])+'\n')
+
+            ax_1.plot3D(xline_1, yline_1, zline_1, 'blue')
+            ax_1.plot3D(xline_2, yline_2, zline_2, 'blue')
+            n = 0
+            index_cube = index_cube + 1
+            #d = input()
+            #individuating min and max (x,y,z) ranges
+            min_x = xline_1[0]
+            max_x = xline_1[0]
+            for i in xline_1:
+                if i < min_x:
+                    min_x = i
+                if i > max_x:
+                    max_x = i
+            #dif_x = max_x - min_x
+            min_y = yline_1[0]
+            max_y = yline_1[0]
+            for i in yline_1:
+                if i < min_y:
+                    min_y = i
+                if i > max_y:
+                    max_y = i
+            #dif_y = max_y - min_y
+            min_z = zline_1[0]
+            max_z = zline_2[0]
+            dif_z = max_z - min_z
+            if dif_z < 0:
+                t = max_z
+                max_z = min_z
+                min_z = t
+
+            writer.write(','.join([str(min_x),str(min_y),str(min_z),str(max_x),str(max_y),str(max_z),str(item)])+'\n')
+
 
