@@ -190,6 +190,7 @@ int point_in_poligon(cube poly,point3d p){
                 inside=!inside;
             }
         }
+        p1=p2;
     }
     return inside;
 }
@@ -207,7 +208,7 @@ int cube_contains_ray(cube cu, ray r) {
 
 int main(int argc, char* argv[]){
     FILE* fin;
-    char* inpath = "../RadRayPy/out_all_points.txt";
+    char* inpath = "../RadrayPy/out_all_points.txt";
     int i; //i é l'indice del cubo
     point3d CUBE_GLOBAL_MAX = {0, 0, 0}, CUBE_GLOBAL_MIN = {1, 1, 1};
     cube cubes[MAX_CUBE];
@@ -245,9 +246,9 @@ int main(int argc, char* argv[]){
                 t.max.y = t.limits[0].y;
             } else {
                 t.max.x = t.limits[i].x > t.max.x ? t.limits[i].x : t.max.x;
-                t.min.x = t.limits[i].x < t.max.x ? t.limits[i].x : t.min.x;
+                t.min.x = t.limits[i].x < t.min.x ? t.limits[i].x : t.min.x;
                 t.max.y = t.limits[i].y > t.max.y ? t.limits[i].y : t.max.y;
-                t.min.y = t.limits[i].y < t.max.y ? t.limits[i].y : t.min.y;
+                t.min.y = t.limits[i].y < t.min.y ? t.limits[i].y : t.min.y;
             }
         }
         if (t.max.x > CUBE_GLOBAL_MAX.x) { CUBE_GLOBAL_MAX.x = t.max.x; }  // computes global max and min, in which the ray must pass
