@@ -36,7 +36,8 @@ typedef struct {
     point3d min;
     point3d max;
     int layer_n;
-    energy_point* points;  //[MAX_POINTS]
+    energy_point* points;
+    int point_amt;
 }cube;
 
 typedef struct {
@@ -80,30 +81,26 @@ point3d param_to_coord(point3d start, point3d end, float t) {  //return x,y of a
     return p;
 }
 
-/*ray rand_ray(point3d min, point3d max) {     //randomly generates the trajectory of a ray given the box bounds
+ray rand_ray(point3d bound_min, point3d bound_max) {     //randomly generates the trajectory of a ray given the box bounds
     ray trajectory;
     //memcpy(CONSTANT, trajectory.energy_curve,ENERGY_CURVE_SIZE*sizeof(char));
-    trajectory.start.x = rand() / (float)RAND_MAX * (max.x - min.x) + min.x;
-    trajectory.start.y = rand() / (float)RAND_MAX * (max.y - min.y) + min.y;
-    trajectory.start.z = max.z;
-    trajectory.end.x = rand() / (float)RAND_MAX * (max.x - min.x) + min.x;
-    trajectory.end.y = rand() / (float)RAND_MAX * (max.y - min.y) + min.y;
-    trajectory.end.z = min.z;
+    trajectory.start.x = rand() / (float)RAND_MAX * (bound_max.x - bound_min.x) + bound_min.x;
+    trajectory.start.y = rand() / (float)RAND_MAX * (bound_max.y - bound_min.y) + bound_min.y;
+    trajectory.start.z = bound_max.z;
+    trajectory.end.x = rand() / (float)RAND_MAX * (bound_max.x - bound_min.x) + bound_min.x;
+    trajectory.end.y = rand() / (float)RAND_MAX * (bound_max.y - bound_min.y) + bound_min.y;
+    trajectory.end.z = bound_min.z;
     trajectory.delta.x = (trajectory.end.x - trajectory.start.x) / N_STEPS;
     trajectory.delta.y = (trajectory.end.y - trajectory.start.y) / N_STEPS;
     trajectory.delta.z = (trajectory.end.z - trajectory.start.z) / N_STEPS;
     return trajectory;
-}*/
+}
 
-ray rand_ray(point3d min, point3d max) {     //randomly generates the trajectory of a ray given the box bounds
+ray fixed_ray(point3d start, point3d end) {     //generates the trajectory of a ray given the start and end positions
     ray trajectory;
     //memcpy(CONSTANT, trajectory.energy_curve,ENERGY_CURVE_SIZE*sizeof(char));
-    trajectory.start.x = 858;
-    trajectory.start.y = 920;
-    trajectory.start.z = max.z;
-    trajectory.end.x = 858;
-    trajectory.end.y = 920;
-    trajectory.end.z = min.z;
+    trajectory.start = start;
+    trajectory.end = end;
     trajectory.delta.x = (trajectory.end.x - trajectory.start.x) / N_STEPS;
     trajectory.delta.y = (trajectory.end.y - trajectory.start.y) / N_STEPS;
     trajectory.delta.z = (trajectory.end.z - trajectory.start.z) / N_STEPS;
@@ -134,6 +131,7 @@ void generate_points_by_amount(cube *curr_cube, int amount){  //generates amount
             }
         }
     }
+    curr_cube->point_amt = cnt;
 }
 
 void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //generates MAX_POINTS points on a grid in each box
@@ -146,12 +144,12 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
     int y_amt = (curr_cube->max.y - curr_cube->min.y) / dy;
     int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
     curr_cube->points = malloc(x_amt * y_amt * z_amt * sizeof(energy_point));
-    for(int x = curr_cube->min.x; x <= curr_cube->max.x; x+=dx){
-        for(int y = curr_cube->min.y; y <= curr_cube->max.y; y+=dy){
-            for(int z = curr_cube->min.z; z <= curr_cube->max.z; z+=dz){
-                t.x = x;
-                t.y = y;
-                t.z = z;
+    for(int i = 0; i < x_amt; i++){
+        for(int j = 0; j < y_amt; j++){
+            for(int k = 0; k < z_amt; k++){
+                t.x = curr_cube->min.x + i * dx;
+                t.y = curr_cube->min.y + j * dy;
+                t.z = curr_cube->min.z + k * dz;
                 curr_cube->points[cnt].pos = t;
                 curr_cube->points[cnt].energy[0] = 0;
                 curr_cube->points[cnt].energy[N_STEPS] = 0;
@@ -159,6 +157,7 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
             }
         }
     }
+    curr_cube->point_amt = cnt;
 }
 
 int cube_contains_point(cube cu, point3d p){
@@ -201,39 +200,47 @@ int main(int argc, char* argv[]){
         if (t.min.y < CUBE_GLOBAL_MIN.y) {CUBE_GLOBAL_MIN.y = t.min.y;}
         if (t.min.z < CUBE_GLOBAL_MIN.z) {CUBE_GLOBAL_MIN.z = t.min.z;}
     }
-    printf("-- Transient Mode analysis ... ");
+    printf("-- Transient Mode analysis ... \n");
 
-    ray ray_traj = rand_ray(CUBE_GLOBAL_MIN, CUBE_GLOBAL_MAX);
+    //ray ray_traj = rand_ray(CUBE_GLOBAL_MIN, CUBE_GLOBAL_MAX);
+    point3d ray_start = {699, 1256, CUBE_GLOBAL_MAX.z};
+    point3d ray_end = {699, 1256, CUBE_GLOBAL_MIN.z};
+    ray ray_traj = fixed_ray(ray_start, ray_end);
     
     FILE *fout = fopen("out.txt", "w");
 
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     int point_ray_dist;
-    point3d res = {15, 15, 15};
+    point3d res = {10, 10, 10};
     float dist_threshold = 10000;
 
-    printf("%f,%f,%f,%f,%f,%f\n", ray_traj.start.x, ray_traj.start.y, ray_traj.start.z, ray_traj.end.x, ray_traj.end.y, ray_traj.end.z);
+    float cube_energy;
+
+    //printf("%f,%f,%f,%f,%f,%f\n", ray_traj.start.x, ray_traj.start.y, ray_traj.start.z, ray_traj.end.x, ray_traj.end.y, ray_traj.end.z);
     fprintf(fout, "%f,%f,%f,%f,%f,%f\n", ray_traj.start.x, ray_traj.start.y, ray_traj.start.z, ray_traj.end.x, ray_traj.end.y, ray_traj.end.z);
     for(int cube_index = 0; cube_index < i; cube_index++){               //Iterates over the cubes
         if(cube_contains_ray(cubes[cube_index], ray_traj)){                     //Check if the ray is in the cube
-            printf("Raggio in cubo %d\n", cube_index);
+            cube_energy = 0;
+            printf("Raggio in cubo %d - ", cube_index);
             fprintf(fout, "%d\n", cube_index);
             generate_points_by_amount(&cubes[cube_index], MAX_POINTS);
             //generate_points_by_resolution(&cubes[cube_index], res);
-            for(int point_index = 0; point_index < MAX_POINTS; point_index++){  //Iterates over points in the cube    
+            for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){  //Iterates over points in the cube    
                 curr_ray_pos = ray_traj.start;                  
                 for(int t = 0; t < N_STEPS; t++){                                //Iterates over ray steps
                     point_ray_dist = distance(cubes[cube_index].points[point_index].pos, curr_ray_pos);
-                    if (point_ray_dist < dist_threshold) {
+                    //if (point_ray_dist < dist_threshold) {
                         cubes[cube_index].points[point_index].energy[t+1] = cubes[cube_index].points[point_index].energy[t] + bell(0, 130, point_ray_dist) * 1000; //* 1000 * CONSTANT[N_STEPS]/100;
                         curr_ray_pos.x += ray_traj.delta.x;
                         curr_ray_pos.y += ray_traj.delta.y;
                         curr_ray_pos.z += ray_traj.delta.z;
-                    }
+                    //}
                 }
                 fprintf(fout, "%f,%f,%f,%f\n", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z, cubes[cube_index].points[point_index].energy[N_STEPS]);
+                cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
             }
+            printf("Energia: %f\n", cube_energy);
         }
     }
     fclose(fin);
