@@ -2,14 +2,18 @@
 #include <stdlib.h>
 //#include <string.h>
 #include <math.h>
+#include <time.h>
 
 #define MAX_CUBE 300
 #define ENERGY_CURVE_SIZE 100
 #define N_STEPS 100
 #define MAX_POINTS 1000
 
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+
 static char CONSTANT[ENERGY_CURVE_SIZE] = {
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
@@ -28,11 +32,18 @@ typedef struct {
 }point3d;
 
 typedef struct {
+    float x;
+    float y;
+}point2d;
+
+typedef struct {
     point3d pos;
     double energy[N_STEPS + 1];  //[N_STEPS]
 }energy_point;
 
 typedef struct {
+    point2d* limits;
+    int N;
     point3d min;
     point3d max;
     int layer_n;
@@ -168,38 +179,87 @@ int cube_contains_point(cube cu, point3d p){
     return 0;
 }
 
+int point_in_poligon(cube poly,point3d p){
+    int inside=0;
+    point2d p1,p2;
+    p1=poly.limits[0];
+    for(int i=1;i<poly.N;i++){
+        p2=poly.limits[i%poly.N];
+        if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
+            if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=poly.min.z && p.z<=poly.max.z){
+                inside=!inside;
+            }
+        }
+    }
+    return inside;
+}
+
 int cube_contains_ray(cube cu, ray r) {
     point3d ray_pos = r.start;
-    for (int i = 0; i < N_STEPS; i++) {
-        if (cube_contains_point(cu, ray_pos)) return 1;
+    for (ray_pos.z = cu.max.z; ray_pos.z > cu.min.z; ray_pos.z+=r.delta.z) {    //rendere for da cu.min.z a cu.max.z
+        if (point_in_poligon(cu, ray_pos)) return 1;
         ray_pos.x += r.delta.x;
         ray_pos.y += r.delta.y;
-        ray_pos.z += r.delta.z;
+        //ray_pos.z += r.delta.z;
     }
     return 0;
 }
 
 int main(int argc, char* argv[]){
     FILE* fin;
-    char* inpath = "../RadrayPy/output.txt";
+    char* inpath = "../RadRayPy/out_all_points.txt";
     int i; //i é l'indice del cubo
     point3d CUBE_GLOBAL_MAX = {0, 0, 0}, CUBE_GLOBAL_MIN = {1, 1, 1};
     cube cubes[MAX_CUBE];
+    //polygon polygons[MAX_CUBE];
+    //cube t;
     cube t;
     
-    srand(123456);
+    srand((unsigned int) time(0));
 
-    fin = fopen(inpath, "r");  //file input, contains min and max of each cube in the GDS (2 x,y,z each)
-    
-    for (i = 0; fscanf(fin, "%f,%f,%f,%f,%f,%f,%d", &t.min.x, &t.min.y, &t.min.z, &t.max.x, &t.max.y, &t.max.z, &t.layer_n) != EOF; i++) {
-        cubes[i] = t;
-        if (t.max.x > CUBE_GLOBAL_MAX.x) {CUBE_GLOBAL_MAX.x = t.max.x;} /* computes global max and min, in which the ray must pass */
-        if (t.max.y > CUBE_GLOBAL_MAX.y) {CUBE_GLOBAL_MAX.y = t.max.y;}
-        if (t.max.z > CUBE_GLOBAL_MAX.z) {CUBE_GLOBAL_MAX.z = t.max.z;}
-        if (t.min.x < CUBE_GLOBAL_MIN.x) {CUBE_GLOBAL_MIN.x = t.min.x;}
-        if (t.min.y < CUBE_GLOBAL_MIN.y) {CUBE_GLOBAL_MIN.y = t.min.y;}
-        if (t.min.z < CUBE_GLOBAL_MIN.z) {CUBE_GLOBAL_MIN.z = t.min.z;}
+    fin = fopen(inpath, "r");
+    if(fin==NULL){
+        printf("Unable to read the file!");
+        exit(1);
     }
+
+    int cube_number=0;
+    /***
+     * Read file, format for each boundary:
+     * N    layer
+     * minz maxz
+     * x    y   (repeated N times)
+     * Calculates minx and miny of the cube Bounding Box
+     * Calculates Global bounding box
+     */
+    while(fscanf(fin, "%d %d", &t.N, &t.layer_n) != EOF) {
+        t.limits = (point2d *) malloc(t.N * sizeof(point2d));
+        t.limits = (point2d *) malloc(t.N * sizeof(point2d));
+        fscanf(fin, "%f %f",&t.min.z,&t.max.z);
+        for (i = 0; i < t.N; i++) {
+            fscanf(fin, "%f %f", &(t.limits[i].x), &t.limits[i].y);
+            if (i == 0) {
+                t.min.x = t.limits[0].x;
+                t.min.y = t.limits[0].y;
+                t.max.x = t.limits[0].x;
+                t.max.y = t.limits[0].y;
+            } else {
+                t.max.x = t.limits[i].x > t.max.x ? t.limits[i].x : t.max.x;
+                t.min.x = t.limits[i].x < t.max.x ? t.limits[i].x : t.min.x;
+                t.max.y = t.limits[i].y > t.max.y ? t.limits[i].y : t.max.y;
+                t.min.y = t.limits[i].y < t.max.y ? t.limits[i].y : t.min.y;
+            }
+        }
+        if (t.max.x > CUBE_GLOBAL_MAX.x) { CUBE_GLOBAL_MAX.x = t.max.x; }  // computes global max and min, in which the ray must pass
+        if (t.max.y > CUBE_GLOBAL_MAX.y) { CUBE_GLOBAL_MAX.y = t.max.y; }
+        if (t.max.z > CUBE_GLOBAL_MAX.z) { CUBE_GLOBAL_MAX.z = t.max.z; }
+        if (t.min.x < CUBE_GLOBAL_MIN.x) { CUBE_GLOBAL_MIN.x = t.min.x; }
+        if (t.min.y < CUBE_GLOBAL_MIN.y) { CUBE_GLOBAL_MIN.y = t.min.y; }
+        if (t.min.z < CUBE_GLOBAL_MIN.z) { CUBE_GLOBAL_MIN.z = t.min.z; }
+        cubes[cube_number] = t;
+        cube_number++;
+    }
+
     printf("-- Transient Mode analysis ... \n");
 
     //ray ray_traj = rand_ray(CUBE_GLOBAL_MIN, CUBE_GLOBAL_MAX);
@@ -213,13 +273,13 @@ int main(int argc, char* argv[]){
     point3d curr_ray_pos;
     int point_ray_dist;
     point3d res = {10, 10, 10};
-    float dist_threshold = 10000;
+    float dist_threshold = 10000;       //=max_x_ray
 
     float cube_energy;
 
     //printf("%f,%f,%f,%f,%f,%f\n", ray_traj.start.x, ray_traj.start.y, ray_traj.start.z, ray_traj.end.x, ray_traj.end.y, ray_traj.end.z);
     fprintf(fout, "%f,%f,%f,%f,%f,%f\n", ray_traj.start.x, ray_traj.start.y, ray_traj.start.z, ray_traj.end.x, ray_traj.end.y, ray_traj.end.z);
-    for(int cube_index = 0; cube_index < i; cube_index++){               //Iterates over the cubes
+    for(int cube_index = 0; cube_index < cube_number; cube_index++){               //Iterates over the cubes
         if(cube_contains_ray(cubes[cube_index], ray_traj)){                     //Check if the ray is in the cube
             cube_energy = 0;
             printf("Raggio in cubo %d - ", cube_index);
@@ -228,10 +288,10 @@ int main(int argc, char* argv[]){
             //generate_points_by_resolution(&cubes[cube_index], res);
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){  //Iterates over points in the cube    
                 curr_ray_pos = ray_traj.start;                  
-                for(int t = 0; t < N_STEPS; t++){                                //Iterates over ray steps
+                for(int step = 0; step < N_STEPS; step++){                                //Iterates over ray steps
                     point_ray_dist = distance(cubes[cube_index].points[point_index].pos, curr_ray_pos);
                     //if (point_ray_dist < dist_threshold) {
-                        cubes[cube_index].points[point_index].energy[t+1] = cubes[cube_index].points[point_index].energy[t] + bell(0, 130, point_ray_dist) * 1000; //* 1000 * CONSTANT[N_STEPS]/100;
+                        cubes[cube_index].points[point_index].energy[step + 1] = cubes[cube_index].points[point_index].energy[step] + bell(0, 130, point_ray_dist) * 1000; //* 1000 * CONSTANT[N_STEPS]/100;
                         curr_ray_pos.x += ray_traj.delta.x;
                         curr_ray_pos.y += ray_traj.delta.y;
                         curr_ray_pos.z += ray_traj.delta.z;

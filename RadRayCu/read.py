@@ -38,8 +38,8 @@ fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 
 layers_cube, layer_list, vertex_cube_list = read_gds("../RadrayPy/MUX2_X1_def_45nm.txt")
-generate_cubes(vertex_cube_list, affected_cubes, ax)
-ax.plot([x1, x2], [y1, y2], [z1, z2], c="maroon", lw=5)
+generate_cubes(vertex_cube_list, [43], ax)
+ax.plot([x1, x2], [y1, y2], [z1, z2], c="maroon", lw=1)
 #ax.scatter(np.array(xv), np.array(yv), np.array(zv), c=np.array(ev))
   
 plt.show()

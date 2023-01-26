@@ -334,10 +334,10 @@ ax.set_xlabel('Ang')
 ax.set_ylabel('Probability density')
 ax.set_title('XY Ion Range Longitudinal Distribution')
 
-min_x_ray = min(abs(ener_scale_pos))
-max_x_ray = max(abs(ener_scale_pos))
-min_y_ray = min(abs(ener_scale_pos))
-max_y_ray = max(abs(ener_scale_pos))
+min_x_ray = 0.67  #min(abs(ener_scale_pos))
+max_x_ray = 44.00 #max(abs(ener_scale_pos))
+min_y_ray = 0.67  #min(abs(ener_scale_pos))
+max_y_ray = 44.00 #max(abs(ener_scale_pos))
 
 print('-- Longitudinal Minimal and Maximal Distance (nm) ', '%.2f' % min_x_ray, '%.2f' % max_x_ray)
 
@@ -883,9 +883,9 @@ if sys.argv[4] == 'T':
         #Propagation Test
         if sys.argv[7] == 'V':
             print('-- Vertical Mode')
-            rad_x_start = random.randint(A_MIN_XR, A_MAX_XR)
+            rad_x_start = 699  #random.randint(A_MIN_XR, A_MAX_XR)
             rad_x_end = rad_x_start
-            rad_y_start = random.randint(A_MIN_YR, A_MAX_YR)
+            rad_y_start = 1256 #random.randint(A_MIN_YR, A_MAX_YR)
             rad_y_end = rad_y_start
         if sys.argv[7] == 'R':
             print('-- Random Mode')

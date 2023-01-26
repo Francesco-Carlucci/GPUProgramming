@@ -41,6 +41,7 @@ def read_gds(path):
     index_cube = 0
     index_vertex = 0
     f = open(path,"r")
+    fout=open("out_all_points.txt","w")
     for line in f:
         line = line.strip()
         if line == 'BOUNDARY':
@@ -56,6 +57,7 @@ def read_gds(path):
                 #Layer Storage
                 if check[0] == 'LAYER':
                     cu_layer = int(check[1])
+
                     #add_lay = 1
                     #for item in layer_list:
                     #	if item == cu_layer:
@@ -66,6 +68,11 @@ def read_gds(path):
                 if data == 'ENDEL':
                     #A cube is closed
                     vertex_cube_list.append(index_vertex)
+                    print(len(layers_cube[cu_layer][index_cube]))
+                    fout.write(str(index_vertex-1) +' '+ str(cu_layer)+ '\n')
+                    fout.write(str(layers_cube[cu_layer][index_cube][0][2]) +' '+ str(layers_cube[cu_layer][index_cube][0][5])+ "\n")
+                    for vertex in layers_cube[cu_layer][index_cube][0:index_vertex-1]:
+                        fout.write(' '.join([str(_) for _ in [*vertex[0:2]]]) + "\n")
                     #print(layers_cube)
                     index_cube = index_cube + 1
                     index_vertex = 0
@@ -97,7 +104,7 @@ def read_gds(path):
                     layers_cube[cu_layer][index_cube][index_vertex][5] = layers_tech[cu_layer][0] + layers_tech[cu_layer][1]
                     index_vertex = index_vertex + 1
                     en_xy = 1
-
+    fout.close()
     total_cube = index_cube		
 
     print('-- Total Number of Cubes : ', total_cube)
