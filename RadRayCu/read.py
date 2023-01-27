@@ -53,4 +53,4 @@ for i,r in enumerate(rays):
 #ax.scatter(np.array(xv), np.array(yv), np.array(zv), c=np.array(ev))
   
 plt.show()
-    
+#fig.savefig("heatmap.svg")

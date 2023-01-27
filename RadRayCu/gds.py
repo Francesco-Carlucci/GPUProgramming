@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 MAX_CUBE = 300
 
@@ -131,5 +132,6 @@ def generate_cubes(vertex_cube_list, print_list, ax_1):
             
             ax_1.plot3D(xline_1, yline_1, zline_1, 'blue')
             ax_1.plot3D(xline_2, yline_2, zline_2, 'blue')
+            #plt.show()
             n = 0
         index_cube = index_cube + 1
