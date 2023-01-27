@@ -11,7 +11,7 @@ rays = []
 
 with open("./out.txt", "r") as fin:
     nrays = int(fin.readline().strip())
-    for i in range(0, nrays):
+    for i in range(nrays):
         splitline = fin.readline().split(",")
         x1 = float(splitline[0]) 
         y1 = float(splitline[1])
@@ -50,7 +50,8 @@ for i,r in enumerate(rays):
     else:
         lw = 2
     ax.plot([r[0], r[1]], [r[2], r[3]], [r[4], r[5]], c="maroon", lw=lw)
-#ax.scatter(np.array(xv), np.array(yv), np.array(zv), c=np.array(ev))
+    
+ax.scatter(np.array(xv), np.array(yv), np.array(zv), c=np.array(ev))
   
 plt.show()
 #fig.savefig("heatmap.svg")
