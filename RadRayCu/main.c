@@ -60,17 +60,17 @@ int main(int argc, char* argv[]){
 
     printf("-- Transient Mode analysis ... \n");
 
-    //ray ray_traj = rand_ray(CUBE_GLOBAL_MIN, CUBE_GLOBAL_MAX);
+    //ray ray_traj = rand_ray(CUBE_GLOBAL_MIN, CUBE_GLOBAL_MAX, Linear);
     point3d ray_start = {699, 1256, CUBE_GLOBAL_MAX.z};
     point3d ray_end = {699, 1256, CUBE_GLOBAL_MIN.z};
-    ray ray_traj = fixed_ray(ray_start, ray_end);
+    ray ray_traj = fixed_ray(ray_start, ray_end, Constant);
     
     FILE *fout = fopen("out.txt", "w");
 
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     int point_ray_dist;
-    point3d res = {35, 35, 35};
+    point3d res = {30, 30, 30};
     float dist_threshold = 10000;       //=max_x_ray
 
     float cube_energy;
@@ -93,12 +93,15 @@ int main(int argc, char* argv[]){
                 curr_ray_pos = ray_traj.start;                  
                 for(int step = 0; step < N_STEPS; step++){                                //Iterates over ray steps
                     point_ray_dist = distance(cubes[cube_index].points[point_index].pos, curr_ray_pos);
-                    //if (point_ray_dist < dist_threshold) {
-                        cubes[cube_index].points[point_index].energy[step + 1] = cubes[cube_index].points[point_index].energy[step] + bell(0, 130, point_ray_dist) * 1000; //* 1000 * CONSTANT[N_STEPS]/100;
-                        curr_ray_pos.x += ray_traj.delta.x;
-                        curr_ray_pos.y += ray_traj.delta.y;
-                        curr_ray_pos.z += ray_traj.delta.z;
-                    //}
+                    cubes[cube_index].points[point_index].energy[step + 1] = 
+                        cubes[cube_index].points[point_index].energy[step] +
+                        bell(0, 130, point_ray_dist) *
+                        1000 *
+                        ray_traj.energy_curve[step];
+                    
+                    curr_ray_pos.x += ray_traj.delta.x;
+                    curr_ray_pos.y += ray_traj.delta.y;
+                    curr_ray_pos.z += ray_traj.delta.z;
                 }
                 fprintf(fout, "%f,%f,%f,%f\n", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z, cubes[cube_index].points[point_index].energy[N_STEPS]);
                 cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];

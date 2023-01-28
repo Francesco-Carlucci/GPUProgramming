@@ -38,32 +38,59 @@ int cube_contains_ray(cube cu, ray r) {
     return 0;
 }
 
-ray rand_ray(point3d bound_min, point3d bound_max) {     //randomly generates the trajectory of a ray given the box bounds
-    ray trajectory;
-    //memcpy(CONSTANT, trajectory.energy_curve,ENERGY_CURVE_SIZE*sizeof(char));
-    trajectory.start.x = rand_unit() * (bound_max.x - bound_min.x) + bound_min.x;
-    trajectory.start.y = rand_unit() * (bound_max.y - bound_min.y) + bound_min.y;
-    trajectory.start.z = bound_max.z;
-    trajectory.end.x = rand_unit() * (bound_max.x - bound_min.x) + bound_min.x;
-    trajectory.end.y = rand_unit() * (bound_max.y - bound_min.y) + bound_min.y;
-    trajectory.end.z = bound_min.z;
-    trajectory.delta.x = (trajectory.end.x - trajectory.start.x) / N_STEPS;
-    trajectory.delta.y = (trajectory.end.y - trajectory.start.y) / N_STEPS;
-    trajectory.delta.z = (trajectory.end.z - trajectory.start.z) / N_STEPS;
-    trajectory.steps = N_STEPS;
-    return trajectory;
+ray rand_ray(point3d bound_min, point3d bound_max, energy_type profile) {     //randomly generates the trajectory of a ray given the box bounds
+    ray r;
+    r.profile = profile;
+    r.start.x = rand_unit() * (bound_max.x - bound_min.x) + bound_min.x;
+    r.start.y = rand_unit() * (bound_max.y - bound_min.y) + bound_min.y;
+    r.start.z = bound_max.z;
+    r.end.x = rand_unit() * (bound_max.x - bound_min.x) + bound_min.x;
+    r.end.y = rand_unit() * (bound_max.y - bound_min.y) + bound_min.y;
+    r.end.z = bound_min.z;
+    r.delta.x = (r.end.x - r.start.x) / N_STEPS;
+    r.delta.y = (r.end.y - r.start.y) / N_STEPS;
+    r.delta.z = (r.end.z - r.start.z) / N_STEPS;
+    r.steps = N_STEPS;
+    generate_energy_profile(&r);
+    return r;
 }
 
-ray fixed_ray(point3d start, point3d end) {     //generates the trajectory of a ray given the start and end positions
-    ray trajectory;
-    //memcpy(CONSTANT, trajectory.energy_curve,ENERGY_CURVE_SIZE*sizeof(char));
-    trajectory.start = start;
-    trajectory.end = end;
-    trajectory.delta.x = (trajectory.end.x - trajectory.start.x) / N_STEPS;
-    trajectory.delta.y = (trajectory.end.y - trajectory.start.y) / N_STEPS;
-    trajectory.delta.z = (trajectory.end.z - trajectory.start.z) / N_STEPS;
-    trajectory.steps = N_STEPS;
-    return trajectory;
+ray fixed_ray(point3d start, point3d end, energy_type profile) {     //generates the trajectory of a ray given the start and end positions
+    ray r;
+    r.profile = profile;
+    r.start = start;
+    r.end = end;
+    r.delta.x = (r.end.x - r.start.x) / N_STEPS;
+    r.delta.y = (r.end.y - r.start.y) / N_STEPS;
+    r.delta.z = (r.end.z - r.start.z) / N_STEPS;
+    r.steps = N_STEPS;
+    generate_energy_profile(&r);
+    return r;
+}
+
+void generate_energy_profile(ray *ray) {    //Aggiungere scalamento in base alla lunghezza del raggio
+    switch (ray->profile) {
+        case Bragg:
+            //TODO
+            for (int i = 0; i < ENERGY_CURVE_SIZE; i++) {
+                ;
+            }
+            break;
+        
+        case Linear:
+            for (int i = 0; i < ENERGY_CURVE_SIZE; i++) {
+                ray->energy_curve[i] = 1 - i/ENERGY_CURVE_SIZE * i;
+            }
+            break;
+        
+        case Constant:
+        default:
+            for (int i = 0; i < ENERGY_CURVE_SIZE; i++) {
+                ray->energy_curve[i] = 1;
+            }
+            break;
+    }
+    return;
 }
 
 void generate_points_by_amount(cube *curr_cube, int amount){  //generates amount points on a grid in each box

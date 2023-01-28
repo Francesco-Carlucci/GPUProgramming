@@ -15,3 +15,4 @@
 - Perchè trasla i cubi di max_x_ray?
 - Interazioni nel nulla contano? (bounding box sovradimensiona il volume)
 - L'energia del raggio in radray è costante? Il parametro della LET come viene usato?
+- Il picco di Bragg è fisso rispetto alla lunghezza del raggio?

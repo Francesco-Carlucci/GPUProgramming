@@ -4,13 +4,13 @@
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
-typedef struct point3d_{
+typedef struct point3d_s{
     float x;
     float y;
     float z;
 }point3d;
 
-typedef struct point2d_{
+typedef struct point2d_s{
     float x;
     float y;
 }point2d;

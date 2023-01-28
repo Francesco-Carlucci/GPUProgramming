@@ -9,25 +9,18 @@
 #define MAX_POINTS 1000
 #define N_RAYS 3
 
-static char CONSTANT[ENERGY_CURVE_SIZE] = {
-     100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-};
+typedef enum energy_type_e{
+    Constant,
+    Linear,
+    Bragg,
+}energy_type;
 
-typedef struct {
+typedef struct energy_point_s{
     point3d pos;
     double energy[N_STEPS + 1];  //[N_STEPS]
 }energy_point;
 
-typedef struct {
+typedef struct cube_s{
     point2d* limits;
     int N;
     point3d min;
@@ -37,20 +30,21 @@ typedef struct {
     int point_amt;
 }cube;
 
-typedef struct {
+typedef struct ray_s{
     point3d start;
     point3d end;
     point3d delta;
     int steps;
+    energy_type profile;
     float energy_curve[ENERGY_CURVE_SIZE];
-    //float energy;
 }ray;
 
 int cube_contains_point(cube cu, point3d p);
 int point_in_polygon(cube poly,point3d p);
 int cube_contains_ray(cube cu, ray r);
-ray rand_ray(point3d bound_min, point3d bound_max);
-ray fixed_ray(point3d start, point3d end);
+ray rand_ray(point3d bound_min, point3d bound_max, energy_type profile);
+ray fixed_ray(point3d start, point3d end, energy_type profile);
+void generate_energy_profile(ray *ray);
 void generate_points_by_amount(cube *curr_cube, int amount);
 void generate_points_by_resolution(cube *curr_cube, point3d resolution);
 void free_cube(cube *cu);

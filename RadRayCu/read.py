@@ -51,7 +51,7 @@ for i,r in enumerate(rays):
         lw = 2
     ax.plot([r[0], r[1]], [r[2], r[3]], [r[4], r[5]], c="maroon", lw=lw)
     
-ax.scatter(np.array(xv), np.array(yv), np.array(zv), c=np.array(ev))
+ax.scatter(np.array(xv), np.array(yv), np.array(zv), c=np.array(ev), alpha=0.5)
   
 plt.show()
 #fig.savefig("heatmap.svg")
