@@ -31,17 +31,17 @@ int main(int argc, char* argv[]){
      * Calculates Global bounding box
      */
     while(fscanf(fin, "%d %d", &t.N, &t.layer_n) != EOF) {
-        t.limits = (point2d *) malloc(t.N * sizeof(point2d));
-        t.limits = (point2d *) malloc(t.N * sizeof(point2d));
-        fscanf(fin, "%f %f",&t.min.z,&t.max.z);
+        t.limits = (point2d *) malloc(t.N * sizeof(point2d));   // number of vertexes of the current cube
+        fscanf(fin, "%f %f",&t.min.z,&t.max.z);                 // min and max height of cube
+        // cycle through all the vertexes
         for (i = 0; i < t.N; i++) {
             fscanf(fin, "%f %f", &(t.limits[i].x), &t.limits[i].y);
-            if (i == 0) {
+            if (i == 0) {                   // initialize variable for computing max and min
                 t.min.x = t.limits[0].x;
                 t.min.y = t.limits[0].y;
                 t.max.x = t.limits[0].x;
                 t.max.y = t.limits[0].y;
-            } else {
+            } else {                        // check if current vartex's variables are new min/max 
                 t.max.x = t.limits[i].x > t.max.x ? t.limits[i].x : t.max.x;
                 t.min.x = t.limits[i].x < t.min.x ? t.limits[i].x : t.min.x;
                 t.max.y = t.limits[i].y > t.max.y ? t.limits[i].y : t.max.y;
@@ -54,12 +54,13 @@ int main(int argc, char* argv[]){
         if (t.min.x < CUBE_GLOBAL_MIN.x) { CUBE_GLOBAL_MIN.x = t.min.x; }
         if (t.min.y < CUBE_GLOBAL_MIN.y) { CUBE_GLOBAL_MIN.y = t.min.y; }
         if (t.min.z < CUBE_GLOBAL_MIN.z) { CUBE_GLOBAL_MIN.z = t.min.z; }
-        cubes[cube_number] = t;
-        cube_number++;
+        cubes[cube_number] = t; // add current cube to array of cubes
+        cube_number++;          // increase cube index
     }
 
     printf("-- Transient Mode analysis ... \n");
 
+    // define the rays
     //ray ray_traj = rand_ray(CUBE_GLOBAL_MIN, CUBE_GLOBAL_MAX);
     point3d ray_start = {699, 1256, CUBE_GLOBAL_MAX.z};
     point3d ray_end = {699, 1256, CUBE_GLOBAL_MIN.z};
@@ -75,10 +76,12 @@ int main(int argc, char* argv[]){
 
     float cube_energy;
 
+    // data structures for secondary high energy rays
     ray ray_arr[N_RAYS];
     generate_rays(ray_arr, ray_traj, N_RAYS);
 
     fprintf(fout, "%d\n", N_RAYS);
+    // save rays to file
     for (int i = 0; i < N_RAYS; i++) {
         fprintf(fout, "%f,%f,%f,%f,%f,%f\n", ray_arr[i].start.x, ray_arr[i].start.y, ray_arr[i].start.z, ray_arr[i].end.x, ray_arr[i].end.y, ray_arr[i].end.z);
     }
@@ -100,7 +103,9 @@ int main(int argc, char* argv[]){
                         curr_ray_pos.z += ray_traj.delta.z;
                     //}
                 }
-                fprintf(fout, "%f,%f,%f,%f\n", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z, cubes[cube_index].points[point_index].energy[N_STEPS]);
+                fprintf(fout, "%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
+                for (int step=1; step <= N_STEPS; step++) fprintf(fout, ",%f", cubes[cube_index].points[point_index].energy[step]);
+                fprintf(fout, "\n");
                 cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
             }
             printf("Energia: %f\n", cube_energy);
