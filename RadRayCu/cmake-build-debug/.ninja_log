@@ -1,2 +1,6 @@
 # ninja log v5
-0	34	1674901915695253679	CMakeFiles/RadRayCu.dir/main.c.o	14653c2d4cc9930
+1	224	6968868057147761	CMakeFiles/RadRayCu.dir/main.c.obj	497d47476ffd9651
+225	354	6968868058255126	RadRayCu.exe	5f329533c5767a85
+2	125	6968901892681533	build.ninja	b3a90967ded942c1
+6	188	6968812235226384	CMakeFiles/RadRayCu.dir/3dmisc.c.obj	bafafd8087faff4c
+0	465	6968858974346790	CMakeFiles/RadRayCu.dir/radray.c.obj	67b276378133f95b

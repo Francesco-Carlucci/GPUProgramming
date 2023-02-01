@@ -151,7 +151,9 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
 }
 
 void free_cube(cube *cu) {
-    free(cu->points);
+    if(cu->points!=NULL){
+        free(cu->points);
+    }
     free(cu->limits);
     return;
 }

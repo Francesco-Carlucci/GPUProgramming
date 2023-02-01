@@ -3,4 +3,4 @@ project(RadRayCu C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(RadRayCu main.c)
+add_executable(RadRayC main.c radray.c 3dmisc.c)

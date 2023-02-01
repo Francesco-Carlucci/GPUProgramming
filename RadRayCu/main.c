@@ -5,58 +5,66 @@
 #include "3dmisc.h"
 #include "radray.h"
 
-int main(int argc, char* argv[]){
+int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE_GLOBAL_MIN){
     FILE* fin;
-    char* inpath = "../RadrayPy/out_all_points.txt";
-    int i; //i é l'indice del cubo
-    point3d CUBE_GLOBAL_MAX = {0, 0, 0}, CUBE_GLOBAL_MIN = {1, 1, 1};
-    cube cubes[MAX_CUBE];
     cube t;
-    
-    srand((unsigned int) time(0));
+    int cube_number=0,i;
 
+    //Open the file
     fin = fopen(inpath, "r");
     if(fin==NULL){
         printf("Unable to read the file!");
         exit(1);
     }
-
-    int cube_number=0;
     /***
-     * Read file, format for each boundary:
-     * N    layer
-     * minz maxz
-     * x    y   (repeated N times)
-     * Calculates minx and miny of the cube Bounding Box
-     * Calculates Global bounding box
+     * Read file, format for each boundary:                 \n
+     * N    layer                                           \n
+     * minz maxz                                            \n
+     * x    y   (repeated N times)                          \n
+     * Calculates minx and miny of the cube Bounding Box    \n
+     * Calculates Global bounding box                       \n
      */
     while(fscanf(fin, "%d %d", &t.N, &t.layer_n) != EOF) {
-        t.limits = (point2d *) malloc(t.N * sizeof(point2d));   // number of vertexes of the current cube
-        fscanf(fin, "%f %f",&t.min.z,&t.max.z);                 // min and max height of cube
-        // cycle through all the vertexes
+        t.limits = (point2d *) malloc(t.N * sizeof(point2d));
+        t.limits = (point2d *) malloc(t.N * sizeof(point2d));
+        fscanf(fin, "%f %f",&t.min.z,&t.max.z);
         for (i = 0; i < t.N; i++) {
             fscanf(fin, "%f %f", &(t.limits[i].x), &t.limits[i].y);
-            if (i == 0) {                   // initialize variable for computing max and min
+            if (i == 0) {
                 t.min.x = t.limits[0].x;
                 t.min.y = t.limits[0].y;
                 t.max.x = t.limits[0].x;
                 t.max.y = t.limits[0].y;
-            } else {                        // check if current vartex's variables are new min/max 
+            } else {
                 t.max.x = t.limits[i].x > t.max.x ? t.limits[i].x : t.max.x;
                 t.min.x = t.limits[i].x < t.min.x ? t.limits[i].x : t.min.x;
                 t.max.y = t.limits[i].y > t.max.y ? t.limits[i].y : t.max.y;
                 t.min.y = t.limits[i].y < t.min.y ? t.limits[i].y : t.min.y;
             }
         }
-        if (t.max.x > CUBE_GLOBAL_MAX.x) { CUBE_GLOBAL_MAX.x = t.max.x; }  // computes global max and min, in which the ray must pass
-        if (t.max.y > CUBE_GLOBAL_MAX.y) { CUBE_GLOBAL_MAX.y = t.max.y; }
-        if (t.max.z > CUBE_GLOBAL_MAX.z) { CUBE_GLOBAL_MAX.z = t.max.z; }
-        if (t.min.x < CUBE_GLOBAL_MIN.x) { CUBE_GLOBAL_MIN.x = t.min.x; }
-        if (t.min.y < CUBE_GLOBAL_MIN.y) { CUBE_GLOBAL_MIN.y = t.min.y; }
-        if (t.min.z < CUBE_GLOBAL_MIN.z) { CUBE_GLOBAL_MIN.z = t.min.z; }
-        cubes[cube_number] = t; // add current cube to array of cubes
-        cube_number++;          // increase cube index
+        if (t.max.x > CUBE_GLOBAL_MAX->x) { CUBE_GLOBAL_MAX->x = t.max.x; }  // computes global max and min, in which the ray must pass
+        if (t.max.y > CUBE_GLOBAL_MAX->y) { CUBE_GLOBAL_MAX->y = t.max.y; }
+        if (t.max.z > CUBE_GLOBAL_MAX->z) { CUBE_GLOBAL_MAX->z = t.max.z; }
+        if (t.min.x < CUBE_GLOBAL_MIN->x) { CUBE_GLOBAL_MIN->x = t.min.x; }
+        if (t.min.y < CUBE_GLOBAL_MIN->y) { CUBE_GLOBAL_MIN->y = t.min.y; }
+        if (t.min.z < CUBE_GLOBAL_MIN->z) { CUBE_GLOBAL_MIN->z = t.min.z; }
+        t.points=NULL;
+        cubes[cube_number] = t;
+        cube_number++;
     }
+    fclose(fin);
+    return cube_number;
+}
+
+int main(int argc, char* argv[]){
+    char* inpath = "../RadrayPy/out_all_points.txt";
+    int cube_number; //i é l'indice del cubo
+    point3d CUBE_GLOBAL_MAX = {0, 0, 0}, CUBE_GLOBAL_MIN = {1, 1, 1};
+    cube cubes[MAX_CUBE];
+    
+    srand((unsigned int) time(0));
+
+    cube_number=read_input(inpath,cubes,&CUBE_GLOBAL_MAX,&CUBE_GLOBAL_MIN);
 
     printf("-- Transient Mode analysis ... \n");
 
@@ -115,7 +123,7 @@ int main(int argc, char* argv[]){
         }
     }
     free_cubes(cubes, cube_number);
-    fclose(fin);
+    //fclose(fin);
     fclose(fout);
     return 0;
     
