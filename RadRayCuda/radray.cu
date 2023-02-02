@@ -202,6 +202,36 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
     return;
 }
 
+void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution){  //generates MAX_POINTS points on a grid in each box
+    point3d t;
+    int cnt = 0;
+    int dx = resolution.x;
+    int dy = resolution.y;
+    int dz = resolution.z;
+    int x_amt = (curr_cube->max.x - curr_cube->min.x) / dx;
+    int y_amt = (curr_cube->max.y - curr_cube->min.y) / dy;
+    int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
+    curr_cube->points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));  //nvcc vuole il cast
+
+    for(int i = 0; i < x_amt; i++){
+        for(int j = 0; j < y_amt; j++){
+            for(int k = 0; k < z_amt; k++){
+                t.x = curr_cube->min.x + i * dx;
+                t.y = curr_cube->min.y + j * dy;
+                t.z = curr_cube->min.z + k * dz;
+                if (point_in_polygon(*curr_cube, t)) {
+                    curr_cube->points[cnt].pos = t;
+                    curr_cube->points[cnt].energy[0] = 0;
+                    curr_cube->points[cnt].energy[N_STEPS] = 0;
+                    cnt++;
+                }
+            }
+        }
+    }
+    curr_cube->point_amt = cnt;
+    return;
+}
+
 void free_cube(cube *cu) {
     if(cu->points!=NULL){
         free(cu->points);
