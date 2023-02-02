@@ -16,7 +16,7 @@ point3d rand_point(point3d min, point3d max) {
 }
 
 float distance(point3d a, point3d b) {  //compute distance between two points
-    double dist;
+    float dist;
     dist = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
     return dist;
 }

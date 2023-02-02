@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#define COMPARE 1
 
 #include "3dmisc.h"
 #include "radray.h"
@@ -61,7 +62,7 @@ int main() {  //pass file name and parameters through command line
 
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
-    int point_ray_dist;
+    float point_ray_dist;
     point3d res = {30, 30, 30};
     float dist_threshold = 10000;       //=max_x_ray
 
@@ -84,7 +85,9 @@ int main() {  //pass file name and parameters through command line
             //generate_points_by_amount(&cubes[cube_index], MAX_POINTS);
             generate_points_by_resolution(&cubes[cube_index], res);
             //for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){  //Iterates over points in the cube
-
+#if COMPARE
+            clock_t begin = clock();
+#endif
             int nblocks=cubes[cube_index].point_amt/1024+1;
             cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));   //(N_STEPS + 1)*sizeof(float)
             //initialize points array on device, first and last element to 0
@@ -103,17 +106,21 @@ int main() {  //pass file name and parameters through command line
                 fprintf(fout, "\n");
                 cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
             }
+#if COMPARE
+            clock_t end = clock();
+            printf("\nparallelized computation: %f\n",(double)(end - begin) / CLOCKS_PER_SEC);
+            printf("Energia: %f\n", cube_energy);
+            cube_energy=0;
+            begin=clock();
 
-            /*
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                     curr_ray_pos = ray_traj.start;
                     for(int step = 0; step < N_STEPS; step++){                                //Iterates over ray steps
                         point_ray_dist = distance(cubes[cube_index].points[point_index].pos, curr_ray_pos);
                         cubes[cube_index].points[point_index].energy[step + 1] =
                                 cubes[cube_index].points[point_index].energy[step] +
-                                bell(0, 130, point_ray_dist) *
-                                1000 *
-                                ray_traj.energy_curve[step];
+                                bell(0, 130, point_ray_dist/10) *
+                                ray_traj.energy_curve[step];  //1000 *
 
                         curr_ray_pos.x += ray_traj.delta.x;
                         curr_ray_pos.y += ray_traj.delta.y;
@@ -125,8 +132,10 @@ int main() {  //pass file name and parameters through command line
                 fprintf(fout, "\n");
                 cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
             }
-            */
-            printf("Energia: %f\n", cube_energy);
+            end = clock();
+            printf("\nsequential computation: %f\n",(double)(end - begin) / CLOCKS_PER_SEC);
+#endif
+            printf("Energia: %f\n\n", cube_energy);
         }
     }
     free_cubes(cubes, cube_number);
