@@ -16,12 +16,13 @@ point3d rand_point(point3d min, point3d max) {
 }
 
 float distance(point3d a, point3d b) {  //compute distance between two points
-    int dist;
+    double dist;
     dist = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
     return dist;
 }
 
 double bell(float mu, float sigma, float dist) {
+    //double bell_value=((1 / (2.506628274631 * sigma)) * exp(-0.5 * pow((1 / sigma * (dist - mu)), 2)));
     return ((1 / (2.506628274631 * sigma)) * exp(-0.5 * pow((1 / sigma * (dist - mu)), 2)));
     //return ((1 / (sqrt(2 * M_PI) * sigma)) *
     //exp(-0.5 * pow((1 / sigma * (dist - mu)), 2)));

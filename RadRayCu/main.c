@@ -78,7 +78,7 @@ int main(int argc, char* argv[]){
 
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
-    int point_ray_dist;
+    float point_ray_dist;
     point3d res = {30, 30, 30};
     float dist_threshold = 10000;       //=max_x_ray
 
@@ -104,12 +104,12 @@ int main(int argc, char* argv[]){
                 curr_ray_pos = ray_traj.start;                  
                 for(int step = 0; step < N_STEPS; step++){                                //Iterates over ray steps
                     point_ray_dist = distance(cubes[cube_index].points[point_index].pos, curr_ray_pos);
-                    cubes[cube_index].points[point_index].energy[step + 1] = 
-                        cubes[cube_index].points[point_index].energy[step] +
-                        bell(0, 130, point_ray_dist) *
-                        1000 *
-                        ray_traj.energy_curve[step];
-                    
+
+                    cubes[cube_index].points[point_index].energy[step + 1] =
+                            cubes[cube_index].points[point_index].energy[step] +
+                            bell(0, 130, point_ray_dist / 10) *
+                            ray_traj.energy_curve[step];
+                    //1000 *
                     curr_ray_pos.x += ray_traj.delta.x;
                     curr_ray_pos.y += ray_traj.delta.y;
                     curr_ray_pos.z += ray_traj.delta.z;
