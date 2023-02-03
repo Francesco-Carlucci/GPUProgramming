@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#define COMPARE 1
+#define COMPARE 0
 
 #include "3dmisc.h"
 #include "radray.h"
+
+
 
 __global__ void compute_energies(energy_point_s* dev_point_ens,ray* dev_ray_traj,int point_amt){
 
@@ -35,6 +37,8 @@ __global__ void compute_energies(energy_point_s* dev_point_ens,ray* dev_ray_traj
     }
 }
 
+
+
 __global__ void compute_energies_fully_parallel(energy_point_s* dev_point_ens,ray* dev_ray_traj,int point_amt){
 
     int tid=blockDim.x*blockIdx.x+threadIdx.x;
@@ -60,26 +64,13 @@ __global__ void compute_energies_fully_parallel(energy_point_s* dev_point_ens,ra
         bell_value = ((1 / (2.506628274631 * 130.0)) * (double)exp(-0.5 * (double)pow((1 / 130.0 * (point_ray_dist/10 - 0)), 2)));
 
         dev_point_ens[point_index].energy[en_index+1] =bell_value*dev_ray_traj->energy_curve[en_index];
-        /*
-        for (int step = 0; step < N_STEPS; step++) {
-            //Iterates over ray steps
-            point_ray_dist = sqrt(pow(dev_point_ens[tid].pos.x - curr_ray_pos.x, 2) +
-                                  pow(dev_point_ens[tid].pos.y - curr_ray_pos.y, 2) +
-                                  pow(dev_point_ens[tid].pos.z - curr_ray_pos.z, 2));
-
-            bell_value = ((1 / (2.506628274631 * 130.0)) * (double)exp(-0.5 * (double)pow((1 / 130.0 * (point_ray_dist/10 - 0)), 2)));
-            dev_point_ens[tid].energy[step + 1] = dev_point_ens[tid].energy[step] +bell_value*
-                                                                                   dev_ray_traj->energy_curve[step];
-
-            curr_ray_pos.x += dev_ray_traj->delta.x;
-            curr_ray_pos.y += dev_ray_traj->delta.y;
-            curr_ray_pos.z += dev_ray_traj->delta.z;
-        }
-        */
     }
 }
 
+
+
 int main() {  //pass file name and parameters through command line
+
     char* inpath = "../RadrayPy/out_all_points.txt";
     int cube_number; //i é l'indice del cubo
     point3d CUBE_GLOBAL_MAX = {0, 0, 0}, CUBE_GLOBAL_MIN = {1, 1, 1};
@@ -91,8 +82,8 @@ int main() {  //pass file name and parameters through command line
 
     printf("-- Transient Mode analysis ... \n");
 
-    point3d ray_start = {699, 1256, CUBE_GLOBAL_MAX.z};
-    point3d ray_end = {699, 1256, CUBE_GLOBAL_MIN.z};
+    point3d ray_start = {50, 50, CUBE_GLOBAL_MAX.z};
+    point3d ray_end = {50, 50, CUBE_GLOBAL_MIN.z};
     ray ray_traj = fixed_ray(ray_start, ray_end, Constant);
 
     ray* dev_ray_traj;
@@ -106,7 +97,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {10, 10, 10};
+    point3d res = {350, 200, 50};
     float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy;
@@ -125,13 +116,12 @@ int main() {  //pass file name and parameters through command line
             cube_energy = 0;
             printf("Raggio nel cubo %d - ", cube_index);
             fprintf(fout, "%d\n", cube_index);
-            //generate_points_by_amount(&cubes[cube_index], MAX_POINTS);
-            generate_points_by_resolution(&cubes[cube_index], res);
-            //for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){  //Iterates over points in the cube
+            generate_points_by_resolution_parallel(&cubes[cube_index], res);
 #if COMPARE
             clock_t begin = clock();
 #endif
             int nblocks=cubes[cube_index].point_amt*N_STEPS/1024+1;   //*N_STEPS
+            clock_t start_energy = clock();
             cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
             //initialize points array on device, first and last element to 0
             cudaMemcpy((void*) dev_point_ens,(void*) cubes[cube_index].points,
@@ -143,6 +133,8 @@ int main() {  //pass file name and parameters through command line
             compute_energies_fully_parallel<<<nblocks,1024>>>(dev_point_ens,dev_ray_traj,cubes[cube_index].point_amt);
 
             cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost); //((void**) &dev_point_ens[i],(N_STEPS + 1)*sizeof(float));
+            clock_t end_energy = clock();
+            printf("ENERGY COMPUTATION: %f\n\n", ((double) (end_energy - start_energy)) / CLOCKS_PER_SEC);
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                 fprintf(fout, "%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
@@ -188,10 +180,10 @@ int main() {  //pass file name and parameters through command line
             printf("Energia: %f\n\n", cube_energy);
         }
     }
+
     free_cubes(cubes, cube_number);
     //fclose(fin);
     fclose(fout);
-    return 0;
 
     return 0;
 }

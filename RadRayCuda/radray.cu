@@ -1,8 +1,67 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "radray.h"
+
+#define MAX_THREADS 1024
+
+
+__device__ int point_in_polygon_dev(cube *poly,point3d p){
+    int inside=0;
+    point2d p1,p2;
+    p1=poly->limits[0];
+
+    for(int i=1;i<poly->N;i++){
+        p2=poly->limits[i%poly->N];
+        if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
+            if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=poly->min.z && p.z<=poly->max.z){
+                inside=!inside;
+            }
+        }
+        p1=p2;
+    }
+    return inside;
+}
+
+
+__global__ void initialize_points(cube *curr_cube, point2d *limits, energy_point *points, int x_amt, int y_amt, int z_amt, int minx, int miny, int minz, int dx, int dy, int dz) {
+
+    int tid = blockDim.x*blockIdx.x+threadIdx.x;
+    int x = tid%x_amt;
+    int y = (tid/x_amt)%y_amt;
+    int z = tid/(x_amt*y_amt);
+    point3d t;
+
+    curr_cube->limits = limits;
+    curr_cube->points = points;
+
+    if (z<z_amt) {
+        t.x = minx + x * dx;
+        t.y = miny + y * dy;
+        t.z = minz + z * dz;
+        if (point_in_polygon_dev(curr_cube, t)) {
+            printf("cube: %d %d %d\n\n", x, y, z);
+            curr_cube->points[tid].pos = t;
+            curr_cube->points[tid].energy[0] = 0;
+            curr_cube->points[tid].energy[N_STEPS] = 0;
+        }
+    }
+
+}
+
+__global__ void test_3d(int x_amt, int y_amt, int z_amt) {
+
+    int tid = blockDim.x*blockIdx.x+threadIdx.x;
+    int x = tid%x_amt;
+    int y = (tid/x_amt)%y_amt;
+    int z = tid/(x_amt*y_amt);
+    if (z<z_amt) printf("cube: %d %d %d\nmax:  %d %d %d\n\n", x, y, z, x_amt, y_amt, z_amt);
+
+
+}
+
 
 int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE_GLOBAL_MIN){
     FILE* fin;
@@ -182,7 +241,9 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
     int x_amt = (curr_cube->max.x - curr_cube->min.x) / dx;
     int y_amt = (curr_cube->max.y - curr_cube->min.y) / dy;
     int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
+    clock_t start = clock();
     curr_cube->points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));  //nvcc vuole il cast
+    clock_t end_alloc = clock();
     for(int i = 0; i < x_amt; i++){
         for(int j = 0; j < y_amt; j++){
             for(int k = 0; k < z_amt; k++){
@@ -199,6 +260,8 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
         }
     }
     curr_cube->point_amt = cnt;
+    clock_t end_init = clock();
+    printf("POINTS GENERATION: alloc=%f, init=%f\n\n", ((double) (end_alloc - start)) / CLOCKS_PER_SEC, ((double) (end_init - end_alloc)) / CLOCKS_PER_SEC);
     return;
 }
 
@@ -211,26 +274,32 @@ void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution)
     int x_amt = (curr_cube->max.x - curr_cube->min.x) / dx;
     int y_amt = (curr_cube->max.y - curr_cube->min.y) / dy;
     int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
+    cube *dev_curr_cube;
+    point2d *dev_limits;
+    energy_point *dev_points;
     curr_cube->points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));  //nvcc vuole il cast
 
-    for(int i = 0; i < x_amt; i++){
-        for(int j = 0; j < y_amt; j++){
-            for(int k = 0; k < z_amt; k++){
-                t.x = curr_cube->min.x + i * dx;
-                t.y = curr_cube->min.y + j * dy;
-                t.z = curr_cube->min.z + k * dz;
-                if (point_in_polygon(*curr_cube, t)) {
-                    curr_cube->points[cnt].pos = t;
-                    curr_cube->points[cnt].energy[0] = 0;
-                    curr_cube->points[cnt].energy[N_STEPS] = 0;
-                    cnt++;
-                }
-            }
-        }
-    }
-    curr_cube->point_amt = cnt;
+    int nblocks = (x_amt*y_amt*z_amt)/MAX_THREADS+1;
+    cudaMalloc((void**)&dev_curr_cube, sizeof(cube));
+    cudaMalloc((void**)&dev_limits, sizeof(curr_cube->N*sizeof(point2d)));
+    cudaMalloc((void**)&dev_points, sizeof(x_amt * y_amt * z_amt * sizeof(energy_point)));
+    cudaMemcpy((void*)dev_curr_cube, (void*)curr_cube, sizeof(cube), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*)dev_limits, (void*)curr_cube->limits, sizeof((curr_cube->N*sizeof(point2d))), cudaMemcpyHostToDevice);
+    initialize_points<<<nblocks,MAX_THREADS>>>(dev_curr_cube, dev_limits, dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz);
+    cudaMemcpy((void*)curr_cube, (void*)dev_curr_cube, sizeof(cube), cudaMemcpyDeviceToHost);
+    cudaMemcpy((void*)curr_cube->points, (void*)dev_points, sizeof(x_amt * y_amt * z_amt * sizeof(energy_point)), cudaMemcpyDeviceToHost);
+    cudaFree(dev_limits); 
+    cudaFree(dev_points); 
+    cudaFree(dev_curr_cube);
+
+    printf("TEST");
+    printf("\n\n%f\n\n", curr_cube->limits[0].x); 
+
+    curr_cube->point_amt = x_amt*y_amt*z_amt;
     return;
 }
+
+
 
 void free_cube(cube *cu) {
     if(cu->points!=NULL){

@@ -47,6 +47,7 @@ ray fixed_ray(point3d start, point3d end, energy_type profile);
 void generate_energy_profile(ray *ray);
 void generate_points_by_amount(cube *curr_cube, int amount);
 void generate_points_by_resolution(cube *curr_cube, point3d resolution);
+void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution);
 void free_cube(cube *cu);
 void free_cubes(cube *c_arr, int n);
 void generate_rays(ray ray_arr[], ray main_ray, int amount);
