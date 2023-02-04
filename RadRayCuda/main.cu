@@ -116,19 +116,19 @@ int main() {  //pass file name and parameters through command line
             cube_energy = 0;
             printf("Raggio nel cubo %d - ", cube_index);
             fprintf(fout, "%d\n", cube_index);
-            clock_t start_point_gen = clock();
+            //clock_t start_point_gen = clock();
             //generate_points_by_resolution(&cubes[cube_index], res);
-            generate_points_by_resolution_parallel(&cubes[cube_index], res);
-            clock_t end_point_gen = clock();
-            printf("POINT GENERATION: %f\n", ((double) (end_point_gen - start_point_gen)) / CLOCKS_PER_SEC);
+            energy_point *dev_point_ens = generate_points_by_resolution_parallel(&cubes[cube_index], res);
+            //clock_t end_point_gen = clock();
+            //printf("POINT GENERATION: %f\n", ((double) (end_point_gen - start_point_gen)) / CLOCKS_PER_SEC);
 #if COMPARE
             clock_t begin = clock();
 #endif
             int nblocks=cubes[cube_index].point_amt*N_STEPS/1024+1;   //*N_STEPS
             clock_t start_energy = clock();
-            cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
+            //cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
             //initialize points array on device, first and last element to 0
-            cudaMemcpy((void*) dev_point_ens, (void*) cubes[cube_index].points, cubes[cube_index].point_amt *sizeof(energy_point), cudaMemcpyHostToDevice);
+            //cudaMemcpy((void*) dev_point_ens, (void*) cubes[cube_index].points, cubes[cube_index].point_amt *sizeof(energy_point), cudaMemcpyHostToDevice);
             /***
              * migliorare gestione blocchi per evitare la warp divergence di point_amt
              */
