@@ -97,7 +97,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {350, 200, 50};
+    point3d res = {10, 10, 10};
     float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy;
@@ -116,7 +116,11 @@ int main() {  //pass file name and parameters through command line
             cube_energy = 0;
             printf("Raggio nel cubo %d - ", cube_index);
             fprintf(fout, "%d\n", cube_index);
+            clock_t start_point_gen = clock();
+            //generate_points_by_resolution(&cubes[cube_index], res);
             generate_points_by_resolution_parallel(&cubes[cube_index], res);
+            clock_t end_point_gen = clock();
+            printf("POINT GENERATION: %f\n", ((double) (end_point_gen - start_point_gen)) / CLOCKS_PER_SEC);
 #if COMPARE
             clock_t begin = clock();
 #endif
@@ -124,13 +128,12 @@ int main() {  //pass file name and parameters through command line
             clock_t start_energy = clock();
             cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
             //initialize points array on device, first and last element to 0
-            cudaMemcpy((void*) dev_point_ens,(void*) cubes[cube_index].points,
-                       cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyHostToDevice);
+            cudaMemcpy((void*) dev_point_ens, (void*) cubes[cube_index].points, cubes[cube_index].point_amt *sizeof(energy_point), cudaMemcpyHostToDevice);
             /***
              * migliorare gestione blocchi per evitare la warp divergence di point_amt
              */
             //compute_energies<<<nblocks,1024>>>(dev_point_ens,dev_ray_traj,cubes[cube_index].point_amt);
-            compute_energies_fully_parallel<<<nblocks,1024>>>(dev_point_ens,dev_ray_traj,cubes[cube_index].point_amt);
+            compute_energies_fully_parallel<<<nblocks,1024>>>(dev_point_ens, dev_ray_traj, cubes[cube_index].point_amt);
 
             cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost); //((void**) &dev_point_ens[i],(N_STEPS + 1)*sizeof(float));
             clock_t end_energy = clock();

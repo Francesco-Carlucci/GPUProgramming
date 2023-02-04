@@ -38,12 +38,11 @@ __global__ void initialize_points(point2d *limits, energy_point *points, int x_a
         t.x = minx + x * dx;
         t.y = miny + y * dy;
         t.z = minz + z * dz;
-        //if (point_in_polygon_dev(limits, N, minz, maxz, t)) {
+        if (point_in_polygon_dev(limits, N, minz, maxz, t)) {
             points[tid].pos = t;
-            points[tid].energy[0] = 4;
+            points[tid].energy[0] = 0;
             points[tid].energy[N_STEPS] = 0;
-            printf("\n%f\n", points[0].energy[0]);
-        //}
+        }
     }
 
 }
@@ -238,9 +237,7 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
     int x_amt = (curr_cube->max.x - curr_cube->min.x) / dx;
     int y_amt = (curr_cube->max.y - curr_cube->min.y) / dy;
     int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
-    clock_t start = clock();
     curr_cube->points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));  //nvcc vuole il cast
-    clock_t end_alloc = clock();
     for(int i = 0; i < x_amt; i++){
         for(int j = 0; j < y_amt; j++){
             for(int k = 0; k < z_amt; k++){
@@ -257,8 +254,6 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
         }
     }
     curr_cube->point_amt = cnt;
-    clock_t end_init = clock();
-    printf("POINTS GENERATION: alloc=%f, init=%f\n\n", ((double) (end_alloc - start)) / CLOCKS_PER_SEC, ((double) (end_init - end_alloc)) / CLOCKS_PER_SEC);
     return;
 }
 
@@ -277,15 +272,16 @@ void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution)
     curr_cube->points = (energy_point *) malloc(curr_cube->point_amt * sizeof(energy_point));  //nvcc vuole il cast
 
     int nblocks = (curr_cube->point_amt)/MAX_THREADS+1;
-    cudaMalloc((void**)&dev_limits, sizeof(curr_cube->N*sizeof(point2d)));
-    cudaMalloc((void**)&dev_points, sizeof(curr_cube->point_amt * sizeof(energy_point)));
-    cudaMemcpy(dev_limits, curr_cube->limits, sizeof((curr_cube->N*sizeof(point2d))), cudaMemcpyHostToDevice);
-    initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->min.z, curr_cube->N);
-    cudaMemcpy(curr_cube->points, dev_points, sizeof(curr_cube->point_amt * sizeof(energy_point)), cudaMemcpyDeviceToHost);
+    // allocation of data structures for GPU
+    cudaMalloc( (void**) &dev_limits, curr_cube->N * sizeof(point2d));
+    cudaMalloc( (void**) &dev_points, curr_cube->point_amt * sizeof(energy_point));
+    // copy of limits array
+    cudaMemcpy(dev_limits, curr_cube->limits, curr_cube->N * sizeof(point2d), cudaMemcpyHostToDevice);
+    initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->N, curr_cube->min.z);
+    cudaMemcpy(curr_cube->points, dev_points, curr_cube->point_amt * sizeof(energy_point), cudaMemcpyDeviceToHost);
+    // free structures
     cudaFree(dev_limits); 
     cudaFree(dev_points); 
-
-    printf("\n%f\n", curr_cube->points[1].energy[0]);
 
     return;
 }
