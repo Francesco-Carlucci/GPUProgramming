@@ -8,13 +8,15 @@
 #define MAX_THREADS 1024
 
 
-__device__ int point_in_polygon_dev(point2d *limits, int N, int minz, int maxz ,point3d p){
+/* Function used to check if the point is inside the cube */
+__device__ int point_in_polygon_dev(point2d *limits, int N, float minz, float maxz ,point3d p){
     int inside=0;
     point2d p1,p2;
     p1 = limits[0];
 
     for(int i=1;i<N;i++){
         p2=limits[i%N];
+        printf("%f %f %f\n", p.z, minz, maxz);
         if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
             if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=minz && p.z<=maxz){
                 inside=!inside;
@@ -26,7 +28,11 @@ __device__ int point_in_polygon_dev(point2d *limits, int N, int minz, int maxz ,
 }
 
 
-__global__ void initialize_points(point2d *limits, energy_point *points, int x_amt, int y_amt, int z_amt, int minx, int miny, int minz, int dx, int dy, int dz, int N, int maxz) {
+/* Kernel lauched to initialize the points of the cube hit by the ray. Each threads has a specific point in the area of the cube, if the point is contained in the cube itself (not only 
+in the area surrounding the cube) the point is initialized.
+TODO: maybe create struct for the parameters or something like that to reduce the lenght of function call
+*/
+__global__ void initialize_points(point2d *limits, energy_point *points, int x_amt, int y_amt, int z_amt, float minx, float miny, float minz, int dx, int dy, int dz, int N, float maxz) {
 
     int tid = blockDim.x*blockIdx.x+threadIdx.x;
     int x = tid%x_amt;
@@ -34,27 +40,20 @@ __global__ void initialize_points(point2d *limits, energy_point *points, int x_a
     int z = tid/(x_amt*y_amt);
     point3d t;
 
+    // with this condition we exclude the thread in excess
     if (z<z_amt) {
         t.x = minx + x * dx;
         t.y = miny + y * dy;
         t.z = minz + z * dz;
+        //printf("%f %f %f\n", t.x, t.y, t.z);
         if (point_in_polygon_dev(limits, N, minz, maxz, t)) {
+            //printf("%d %d %d %f %f\n", z, z_amt, dz, t.z, minz);
+            //printf("%f %f %f\n", t.x, t.y, t.z);
             points[tid].pos = t;
             points[tid].energy[0] = 0;
             points[tid].energy[N_STEPS] = 0;
         }
     }
-
-}
-
-__global__ void test_3d(int x_amt, int y_amt, int z_amt) {
-
-    int tid = blockDim.x*blockIdx.x+threadIdx.x;
-    int x = tid%x_amt;
-    int y = (tid/x_amt)%y_amt;
-    int z = tid/(x_amt*y_amt);
-    if (z<z_amt) printf("cube: %d %d %d\nmax:  %d %d %d\n\n", x, y, z, x_amt, y_amt, z_amt);
-
 
 }
 
@@ -124,6 +123,7 @@ int point_in_polygon(cube poly,point3d p){
     p1=poly.limits[0];
     for(int i=1;i<poly.N;i++){
         p2=poly.limits[i%poly.N];
+        printf("%f %f %f\n", p.z, poly.min.z, poly.max.z);
         if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
             if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=poly.min.z && p.z<=poly.max.z){
                 inside=!inside;
@@ -237,16 +237,17 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
     int x_amt = (curr_cube->max.x - curr_cube->min.x) / dx;
     int y_amt = (curr_cube->max.y - curr_cube->min.y) / dy;
     int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
-    clock_t start = clock();
     curr_cube->points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));  //nvcc vuole il cast
-    clock_t end_alloc = clock();
     for(int i = 0; i < x_amt; i++){
         for(int j = 0; j < y_amt; j++){
             for(int k = 0; k < z_amt; k++){
                 t.x = curr_cube->min.x + i * dx;
                 t.y = curr_cube->min.y + j * dy;
                 t.z = curr_cube->min.z + k * dz;
+                //printf("%f %f %f\n", t.x, t.y, t.z);
                 if (point_in_polygon(*curr_cube, t)) {
+                    //printf("%d %d %d %f %f\n", k, z_amt, dz, t.z, curr_cube->min.z);
+                    //printf("%f %f %f\n", t.x, t.y, t.z);
                     curr_cube->points[cnt].pos = t;
                     curr_cube->points[cnt].energy[0] = 0;
                     curr_cube->points[cnt].energy[N_STEPS] = 0;
@@ -256,12 +257,15 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
         }
     }
     curr_cube->point_amt = cnt;
-    clock_t end_init = clock();
-    printf("\nPOINTS GENERATION SEQUENTIAL: alloc=%f, init=%f\n", ((double) (end_alloc - start)) / CLOCKS_PER_SEC, ((double) (end_init - end_alloc)) / CLOCKS_PER_SEC);
     return;
 }
 
-energy_point* generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution){  //generates MAX_POINTS points on a grid in each box
+
+/* Generates the points inside a cube with a given resolution, it directly returns the pointer to the points vector in the GPU so that we don't need to
+   copy it back to host and again to the GPU */
+energy_point* generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution){
+
+    // data structures used
     point3d t;
     int cnt = 0;
     int dx = resolution.x;
@@ -273,10 +277,9 @@ energy_point* generate_points_by_resolution_parallel(cube *curr_cube, point3d re
     curr_cube->point_amt = x_amt*y_amt*z_amt;
     point2d *dev_limits;
     energy_point *dev_points;
-    clock_t start = clock();
     curr_cube->points = (energy_point *) malloc(curr_cube->point_amt * sizeof(energy_point));  //nvcc vuole il cast
-    clock_t end_alloc = clock();
 
+    // blocks needed to cover all possible points
     int nblocks = (curr_cube->point_amt)/MAX_THREADS+1;
     // allocation of data structures for GPU
     cudaMalloc( (void**) &dev_limits, curr_cube->N * sizeof(point2d));
@@ -287,9 +290,6 @@ energy_point* generate_points_by_resolution_parallel(cube *curr_cube, point3d re
     //cudaMemcpy(curr_cube->points, dev_points, curr_cube->point_amt * sizeof(energy_point), cudaMemcpyDeviceToHost);
     // free structures
     cudaFree(dev_limits); 
-
-    clock_t end_init = clock();
-    printf("\nPOINTS GENERATION SEQUENTIAL: alloc=%f, init=%f\n", ((double) (end_alloc - start)) / CLOCKS_PER_SEC, ((double) (end_init - end_alloc)) / CLOCKS_PER_SEC);
 
     return dev_points;
 }

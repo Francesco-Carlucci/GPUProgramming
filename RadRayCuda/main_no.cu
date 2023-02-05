@@ -7,6 +7,7 @@
 #include "radray.h"
 
 
+
 __global__ void compute_energies(energy_point_s* dev_point_ens,ray* dev_ray_traj,int point_amt){
 
     int tid=blockDim.x*blockIdx.x+threadIdx.x;
@@ -124,17 +125,20 @@ int main() {  //pass file name and parameters through command line
             fprintf(fout, "%d\n", cube_index);
 
             // POINTS GENERATION
-            energy_point *dev_point_ens;
-            dev_point_ens = generate_points_by_resolution_parallel(&cubes[cube_index], res);
+            generate_points_by_resolution(&cubes[cube_index], res);
 #if COMPARE
             clock_t begin = clock();
 #endif
             int nblocks=cubes[cube_index].point_amt*N_STEPS/1024+1;   //*N_STEPS
+
+            cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
+            //initialize points array on device, first and last element to 0
+            cudaMemcpy((void*) dev_point_ens, (void*) cubes[cube_index].points, cubes[cube_index].point_amt *sizeof(energy_point), cudaMemcpyHostToDevice);
             /***
              * migliorare gestione blocchi per evitare la warp divergence di point_amt
              */
             compute_energies_fully_parallel<<<nblocks,1024>>>(dev_point_ens, dev_ray_traj, cubes[cube_index].point_amt);
-            cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
+            cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost); 
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                 fprintf(fout, "%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
