@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
 #define COMPARE 1
+//#define POINT_GEN_PAR
 
 #include "3dmisc.h"
 #include "radray.h"
@@ -96,10 +98,10 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {30, 30, 30};
+    point3d res = {10, 10, 10};
     float dist_threshold = 10000;       ///:/=max_x_ray
 
-    float cube_energy;
+    float cube_energy_sequential, cube_energy_parallel;
 
     // SECONDARY HIGH ENERGY RAYS GENERATION
 
@@ -112,26 +114,34 @@ int main() {  //pass file name and parameters through command line
         fprintf(fout, "%f,%f,%f,%f,%f,%f\n", ray_arr[i].start.x, ray_arr[i].start.y, ray_arr[i].start.z, ray_arr[i].end.x, ray_arr[i].end.y, ray_arr[i].end.z);
     }
 
-    // SIMULATION
+    // ################################################## SIMULATION PARALLEL ############################################
+
+    printf("PARALLEL:\n");
+
+#if COMPARE
+    clock_t begin_par = clock();
+#endif
 
     // for each cube in our system
-    for(int cube_index = 0; cube_index < cube_number; cube_index++){               //Iterates over the cubes
+    for(int cube_index = 0; cube_index < cube_number; cube_index++){
 
         // if the ray pass through the current cube we generate the points (atoms) and compute the energy
-        if(cube_contains_ray(cubes[cube_index], ray_traj)){                     //Check if the ray is in the cube
-            cube_energy = 0;
+        if(cube_contains_ray(cubes[cube_index], ray_traj)){
+            cube_energy_parallel = 0;
             printf("Raggio nel cubo %d - ", cube_index);
             fprintf(fout, "%d\n", cube_index);
 
             // POINTS GENERATION
-            //energy_point *dev_point_ens;
-            generate_points_by_resolution_parallel(&cubes[cube_index], res,&dev_point_ens);
-            //cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
-            //cube currcube=cubes[cube_index];
-            //generate_points_by_resolution(&currcube,res);
-#if COMPARE
-            clock_t begin = clock();
+
+#ifdef POINT_GEN_PAR           
+            generate_points_by_resolution_parallel(&cubes[cube_index], res, &dev_point_ens);
 #endif
+#ifndef POINT_GEN_PAR
+            generate_points_by_resolution(&cubes[cube_index], res);
+            cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
+            cudaMemcpy((void*) dev_point_ens, (void*) cubes[cube_index].points, cubes[cube_index].point_amt *sizeof(energy_point), cudaMemcpyHostToDevice);
+#endif
+
             int nblocks=cubes[cube_index].point_amt*N_STEPS/1024+1;   //*N_STEPS
             /***
              * migliorare gestione blocchi per evitare la warp divergence di point_amt
@@ -147,17 +157,40 @@ int main() {  //pass file name and parameters through command line
                 }
                 fprintf(fout, "\n");
                 if(!(cubes[cube_index].points[point_index].pos.x==0 && cubes[cube_index].points[point_index].pos.y==0 &&cubes[cube_index].points[point_index].pos.z==0)) {
-                    cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
+                    cube_energy_parallel += cubes[cube_index].points[point_index].energy[N_STEPS];
                 }
             }
+            printf("Energy %f\n", cube_energy_parallel);
+        }
+    }
+        
 #if COMPARE
-            clock_t end = clock();
-            double parallel_time=(double) (end - begin)/ CLOCKS_PER_SEC;
-            printf("\nParallelized computation: %f\n",parallel_time);
-            printf("Energia: %f\n", cube_energy);
-            cube_energy=0;
-            begin=clock();
-            free(cubes[cube_index].points);
+    clock_t end_par = clock();
+#endif
+
+
+    // ################################################## SIMULATION SEQUENTIAL ############################################
+
+#if COMPARE
+
+    // freeing and resetting data structures for time comparison
+    for(int cube_index = 0; cube_index < cube_number; cube_index++)
+        free(cubes[cube_index].points);
+
+    printf("\nSEQUENTIAL:\n");
+
+    clock_t begin_seq = clock();
+
+    // for each cube in our system
+    for(int cube_index = 0; cube_index < cube_number; cube_index++){
+
+        // if the ray pass through the current cube we generate the points (atoms) and compute the energy
+        if(cube_contains_ray(cubes[cube_index], ray_traj)){
+            cube_energy_sequential = 0;
+            printf("Raggio nel cubo %d - ", cube_index);
+            fprintf(fout, "%d\n", cube_index);
+
+            cube_energy_sequential=0;
 
             generate_points_by_resolution(&cubes[cube_index],res);
 
@@ -178,16 +211,22 @@ int main() {  //pass file name and parameters through command line
                 fprintf(fout, "%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
                 for (int step=1; step <= N_STEPS; step++) fprintf(fout, ",%f", cubes[cube_index].points[point_index].energy[step]);
                 fprintf(fout, "\n");
-                cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
+                cube_energy_sequential += cubes[cube_index].points[point_index].energy[N_STEPS];
             }
-            end = clock();
-            double sequential_time=(double) (end - begin)/ CLOCKS_PER_SEC;
-            printf("\nsequential computation: %f\n",sequential_time);
-            printf("speedup= %.2f %% \n",(1-parallel_time/sequential_time)*100);
-#endif
-            printf("Energia: %f\n\n", cube_energy);
+            printf("Energy %f\n", cube_energy_sequential);
         }
     }
+
+    clock_t end_seq = clock();
+
+    double sequential_time = (double) (end_seq - begin_seq) / CLOCKS_PER_SEC;
+    double parallel_time =(double) (end_par - begin_par) / CLOCKS_PER_SEC;
+
+    printf("\nParallelized computation: %f\n",parallel_time);
+    printf("Sequential computation: %f\n",sequential_time);
+    printf("Speedup= %.2f %% \n",(1-parallel_time/sequential_time)*100);
+
+    #endif
 
     // FREE DATA STRUCTURES AND CLOSE FILES
 
