@@ -16,7 +16,7 @@ __device__ int point_in_polygon_dev(point2d *limits, int N, float minz, float ma
 
     for(int i=1;i<N;i++){
         p2=limits[i%N];
-        printf("%f %f %f\n", p.z, minz, maxz);
+        //printf("%f %f %f\n", p.z, minz, maxz);
         if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
             if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=minz && p.z<=maxz){
                 inside=!inside;
@@ -30,25 +30,30 @@ __device__ int point_in_polygon_dev(point2d *limits, int N, float minz, float ma
 
 /* Kernel lauched to initialize the points of the cube hit by the ray. Each threads has a specific point in the area of the cube, if the point is contained in the cube itself (not only 
 in the area surrounding the cube) the point is initialized.
-TODO: maybe create struct for the parameters or something like that to reduce the lenght of function call
+TODO: maybe create struct for the parameters or something like that to reduce the length of function call
 */
-__global__ void initialize_points(point2d *limits, energy_point *points, int x_amt, int y_amt, int z_amt, float minx, float miny, float minz, int dx, int dy, int dz, int N, float maxz) {
+__global__ void initialize_points(point2d *limits, energy_point *points, int x_amt, int y_amt, int z_amt,
+                                  float minx, float miny, float minz, int dx, int dy, int dz, int N, float maxz) {
 
     int tid = blockDim.x*blockIdx.x+threadIdx.x;
-    int x = tid%x_amt;
-    int y = (tid/x_amt)%y_amt;
-    int z = tid/(x_amt*y_amt);
+    //int x = tid%x_amt;
+    int x=tid/(y_amt*z_amt);
+    //int y = (tid/x_amt)%y_amt;
+    int y=(tid%(y_amt*z_amt))/z_amt;
+    //int z = tid/(x_amt*y_amt);
+    int z=tid%z_amt;
     point3d t;
 
     // with this condition we exclude the thread in excess
-    if (z<z_amt) {
+    if (x<x_amt) {   //tid<(x_amt*y_amt*z_amt)
+        //printf("tid: %d x: %d y: %d z: %d x_amt: %d y_amt:%d z_amt:%d\n",tid,x,y,z,x_amt,y_amt,z_amt);
         t.x = minx + x * dx;
         t.y = miny + y * dy;
         t.z = minz + z * dz;
         //printf("%f %f %f\n", t.x, t.y, t.z);
         if (point_in_polygon_dev(limits, N, minz, maxz, t)) {
             //printf("%d %d %d %f %f\n", z, z_amt, dz, t.z, minz);
-            //printf("%f %f %f\n", t.x, t.y, t.z);
+            //printf("punto nel poligono, tid:%d %f %f %f\n",tid, t.x, t.y, t.z);
             points[tid].pos = t;
             points[tid].energy[0] = 0;
             points[tid].energy[N_STEPS] = 0;
@@ -123,7 +128,7 @@ int point_in_polygon(cube poly,point3d p){
     p1=poly.limits[0];
     for(int i=1;i<poly.N;i++){
         p2=poly.limits[i%poly.N];
-        printf("%f %f %f\n", p.z, poly.min.z, poly.max.z);
+        //printf("%f %f %f\n", p.z, poly.min.z, poly.max.z);
         if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
             if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=poly.min.z && p.z<=poly.max.z){
                 inside=!inside;

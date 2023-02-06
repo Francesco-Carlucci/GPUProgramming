@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#define COMPARE 0
+#define COMPARE 1
 
 #include "3dmisc.h"
 #include "radray.h"
@@ -81,8 +81,8 @@ int main() {  //pass file name and parameters through command line
 
     printf("-- Transient Mode analysis ... \n");
 
-    point3d ray_start = {30, 1256, CUBE_GLOBAL_MAX.z};
-    point3d ray_end = {30, 1256, CUBE_GLOBAL_MIN.z};
+    point3d ray_start = {699, 1256, CUBE_GLOBAL_MAX.z};
+    point3d ray_end = {699, 1256, CUBE_GLOBAL_MIN.z};
     ray ray_traj = fixed_ray(ray_start, ray_end, Constant);
 
     ray* dev_ray_traj;
@@ -96,7 +96,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {300, 200, 50};
+    point3d res = {30, 30, 30};
     float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy;
@@ -148,7 +148,7 @@ int main() {  //pass file name and parameters through command line
 #if COMPARE
             clock_t end = clock();
             double parallel_time=(double) (end - begin)/ CLOCKS_PER_SEC;
-            printf("\nparallelized computation: %f\n",parallel_time);
+            printf("\nParallelized computation: %f\n",parallel_time);
             printf("Energia: %f\n", cube_energy);
             cube_energy=0;
             begin=clock();
@@ -183,7 +183,7 @@ int main() {  //pass file name and parameters through command line
 
     // FREE DATA STRUCTURES AND CLOSE FILES
 
-    cudaFree(dev_point_ens);
+    //cudaFree(dev_point_ens);
     cudaFree(dev_ray_traj);
     free_cubes(cubes, cube_number);
     //fclose(fin);
