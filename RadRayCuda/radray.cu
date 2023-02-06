@@ -16,7 +16,7 @@ __device__ int point_in_polygon_dev(point2d *limits, int N, float minz, float ma
 
     for(int i=1;i<N;i++){
         p2=limits[i%N];
-        //printf("%f %f %f\n", p.z, minz, maxz);
+        //if(p.x==15.0 && p.y==720.0 &&p.z==250.0) printf("%f %f %f %f %f %f\n", p1.x,p1.y,minz,p2.x,p2.y,maxz);
         if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
             if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=minz && p.z<=maxz){
                 inside=!inside;
@@ -45,12 +45,13 @@ __global__ void initialize_points(point2d *limits, energy_point *points, int x_a
     point3d t;
 
     // with this condition we exclude the thread in excess
-    if (x<x_amt) {   //tid<(x_amt*y_amt*z_amt)
-        //printf("tid: %d x: %d y: %d z: %d x_amt: %d y_amt:%d z_amt:%d\n",tid,x,y,z,x_amt,y_amt,z_amt);
+    if (tid<(x_amt*y_amt*z_amt)) {   //tid<(x_amt*y_amt*z_amt)
         t.x = minx + x * dx;
         t.y = miny + y * dy;
         t.z = minz + z * dz;
-        //printf("%f %f %f\n", t.x, t.y, t.z);
+        /*if(tid==0) printf("tid: %d x: %d y: %d z: %d x_amt: %d y_amt:%d z_amt:%d, minx: %f miny: %f minz: %f maxz: %f"
+                          "pos:(%f,%f,%f)\n",tid,x,y,z,x_amt,y_amt,z_amt,minx,miny,minz,maxz,t.x,t.y,t.z);
+                          */
         if (point_in_polygon_dev(limits, N, minz, maxz, t)) {
             //printf("%d %d %d %f %f\n", z, z_amt, dz, t.z, minz);
             //printf("punto nel poligono, tid:%d %f %f %f\n",tid, t.x, t.y, t.z);
@@ -268,11 +269,11 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
 
 /* Generates the points inside a cube with a given resolution, it directly returns the pointer to the points vector in the GPU so that we don't need to
    copy it back to host and again to the GPU */
-energy_point* generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution){
+void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution,energy_point** dev_points){
 
     // data structures used
-    point3d t;
-    int cnt = 0;
+    //point3d t;
+    //int cnt = 0;
     int dx = resolution.x;
     int dy = resolution.y;
     int dz = resolution.z;
@@ -281,22 +282,22 @@ energy_point* generate_points_by_resolution_parallel(cube *curr_cube, point3d re
     int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
     curr_cube->point_amt = x_amt*y_amt*z_amt;
     point2d *dev_limits;
-    energy_point *dev_points;
+    //energy_point *dev_points;
     curr_cube->points = (energy_point *) malloc(curr_cube->point_amt * sizeof(energy_point));  //nvcc vuole il cast
 
     // blocks needed to cover all possible points
     int nblocks = (curr_cube->point_amt)/MAX_THREADS+1;
     // allocation of data structures for GPU
     cudaMalloc( (void**) &dev_limits, curr_cube->N * sizeof(point2d));
-    cudaMalloc( (void**) &dev_points, curr_cube->point_amt * sizeof(energy_point));
+    cudaMalloc( (void**) dev_points, curr_cube->point_amt * sizeof(energy_point));
     // copy of limits array
     cudaMemcpy(dev_limits, curr_cube->limits, curr_cube->N * sizeof(point2d), cudaMemcpyHostToDevice);
-    initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->N, curr_cube->min.z);
+    initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, *dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->N, curr_cube->max.z);
     //cudaMemcpy(curr_cube->points, dev_points, curr_cube->point_amt * sizeof(energy_point), cudaMemcpyDeviceToHost);
     // free structures
     cudaFree(dev_limits); 
 
-    return dev_points;
+    //return *dev_points;
 }
 
 

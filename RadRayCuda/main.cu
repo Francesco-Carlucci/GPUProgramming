@@ -124,8 +124,11 @@ int main() {  //pass file name and parameters through command line
             fprintf(fout, "%d\n", cube_index);
 
             // POINTS GENERATION
-            energy_point *dev_point_ens;
-            dev_point_ens = generate_points_by_resolution_parallel(&cubes[cube_index], res);
+            //energy_point *dev_point_ens;
+            generate_points_by_resolution_parallel(&cubes[cube_index], res,&dev_point_ens);
+            //cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
+            //cube currcube=cubes[cube_index];
+            //generate_points_by_resolution(&currcube,res);
 #if COMPARE
             clock_t begin = clock();
 #endif
@@ -143,7 +146,9 @@ int main() {  //pass file name and parameters through command line
                     fprintf(fout, ",%f", cubes[cube_index].points[point_index].energy[step]);
                 }
                 fprintf(fout, "\n");
-                cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
+                if(!(cubes[cube_index].points[point_index].pos.x==0 && cubes[cube_index].points[point_index].pos.y==0 &&cubes[cube_index].points[point_index].pos.z==0)) {
+                    cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
+                }
             }
 #if COMPARE
             clock_t end = clock();
@@ -152,6 +157,9 @@ int main() {  //pass file name and parameters through command line
             printf("Energia: %f\n", cube_energy);
             cube_energy=0;
             begin=clock();
+            free(cubes[cube_index].points);
+
+            generate_points_by_resolution(&cubes[cube_index],res);
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                     curr_ray_pos = ray_traj.start;
@@ -183,7 +191,7 @@ int main() {  //pass file name and parameters through command line
 
     // FREE DATA STRUCTURES AND CLOSE FILES
 
-    //cudaFree(dev_point_ens);
+    cudaFree(dev_point_ens);
     cudaFree(dev_ray_traj);
     free_cubes(cubes, cube_number);
     //fclose(fin);
