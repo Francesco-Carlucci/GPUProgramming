@@ -9,14 +9,16 @@
 
 
 /* Function used to check if the point is inside the cube */
-__device__ int point_in_polygon_dev(point2d *limits, int N, float minz, float maxz ,point3d p){
+__device__ int point_in_polygon_dev(point2d *limits, int N, float minz, float maxz, point3d p){
     int inside=0;
     point2d p1,p2;
     p1 = limits[0];
 
+    printf("%f %f %f FIRST: %f %f ", p.x, p.y, p.z, p1.x, p1.y);
+    //printf("%f %f %f\n", p.z, minz, maxz);
     for(int i=1;i<N;i++){
         p2=limits[i%N];
-        printf("%f %f %f\n", p.z, minz, maxz);
+        printf("ITER %d: %f %f %d ", i, p2.x, p2.y, inside);
         if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
             if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=minz && p.z<=maxz){
                 inside=!inside;
@@ -24,6 +26,7 @@ __device__ int point_in_polygon_dev(point2d *limits, int N, float minz, float ma
         }
         p1=p2;
     }
+    printf("\n\n");
     return inside;
 }
 
@@ -46,6 +49,7 @@ __global__ void initialize_points(point2d *limits, energy_point *points, int x_a
         t.y = miny + y * dy;
         t.z = minz + z * dz;
         //printf("%f %f %f\n", t.x, t.y, t.z);
+        t.x = 15; t.y = 920; t.z = 270;
         if (point_in_polygon_dev(limits, N, minz, maxz, t)) {
             //printf("%d %d %d %f %f\n", z, z_amt, dz, t.z, minz);
             //printf("%f %f %f\n", t.x, t.y, t.z);
@@ -121,16 +125,19 @@ int point_in_polygon(cube poly,point3d p){
     int inside=0;
     point2d p1,p2;
     p1=poly.limits[0];
+    printf("%f %f %f FIRST: %f %f ", p.x, p.y, p.z, p1.x, p1.y);
+    //printf("%f %f %f\n", p.z, poly.min.z, poly.max.z);
     for(int i=1;i<poly.N;i++){
         p2=poly.limits[i%poly.N];
-        printf("%f %f %f\n", p.z, poly.min.z, poly.max.z);
-        if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
+        printf("ITER %d: %f %f %d ", i, p2.x, p2.y, inside);
+       if((p.y>min(p1.y,p2.y)) &&(p.y<=max(p1.y,p2.y))&&(p.x<=max(p1.x,p2.x))&&(p1.y != p2.y)){
             if (p.x<(p.y-p1.y)*(p2.x-p1.x)/(p2.y-p1.y)+p1.x && p.z>=poly.min.z && p.z<=poly.max.z){
                 inside=!inside;
             }
         }
         p1=p2;
     }
+    printf("\n\n");
     return inside;
 }
 
@@ -244,6 +251,7 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
                 t.x = curr_cube->min.x + i * dx;
                 t.y = curr_cube->min.y + j * dy;
                 t.z = curr_cube->min.z + k * dz;
+                t.x = 15; t.y = 920; t.z = 270;
                 //printf("%f %f %f\n", t.x, t.y, t.z);
                 if (point_in_polygon(*curr_cube, t)) {
                     //printf("%d %d %d %f %f\n", k, z_amt, dz, t.z, curr_cube->min.z);
@@ -286,7 +294,7 @@ energy_point* generate_points_by_resolution_parallel(cube *curr_cube, point3d re
     cudaMalloc( (void**) &dev_points, curr_cube->point_amt * sizeof(energy_point));
     // copy of limits array
     cudaMemcpy(dev_limits, curr_cube->limits, curr_cube->N * sizeof(point2d), cudaMemcpyHostToDevice);
-    initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->N, curr_cube->min.z);
+    initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->N, curr_cube->max.z);
     //cudaMemcpy(curr_cube->points, dev_points, curr_cube->point_amt * sizeof(energy_point), cudaMemcpyDeviceToHost);
     // free structures
     cudaFree(dev_limits); 
