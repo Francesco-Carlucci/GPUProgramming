@@ -42,6 +42,8 @@ cmake-build-debug
 *.x86_64
 *.hex
 main
+out_par.txt
+out_seq.txt
 
 # Debug files
 *.dSYM/
