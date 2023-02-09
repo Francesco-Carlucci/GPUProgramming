@@ -28,6 +28,8 @@ typedef struct cube_s{
     int layer_n;
     energy_point* points;
     int point_amt;
+    int rectN;
+    point2d* rects;
 }cube;
 
 typedef struct ray_s{
@@ -52,5 +54,7 @@ void free_cube(cube *cu);
 void free_cubes(cube *c_arr, int n);
 void generate_rays(ray ray_arr[], ray main_ray, int amount);
 int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE_GLOBAL_MIN);
+
+int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_point* points,int minz,int maxz,int offset);
 
 #endif

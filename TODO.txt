@@ -1,0 +1,6 @@
+- Kernel che genera per ogni rettangolo
+- sistemare il funzionamento con risoluzione bassa
+- organizzare meglio tutto il codice
+- sistemare heatmap
+- eventualmente parallelizzare i raggi
+* decidere contributi raggi secondari

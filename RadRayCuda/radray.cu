@@ -101,6 +101,12 @@ int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE
                 t.min.y = t.limits[i].y < t.min.y ? t.limits[i].y : t.min.y;
             }
         }
+        //read rectangles that divide the polygon
+        fscanf(fin, "%d",&t.rectN);
+        t.rects=(point2d *) malloc(t.rectN * sizeof(point2d));
+        for(i=0;i<t.rectN;i++){
+            fscanf(fin, "%f %f", &(t.rects[i].x), &t.rects[i].y);
+        }
         if (t.max.x > CUBE_GLOBAL_MAX->x) { CUBE_GLOBAL_MAX->x = t.max.x; }  // computes global max and min, in which the ray must pass
         if (t.max.y > CUBE_GLOBAL_MAX->y) { CUBE_GLOBAL_MAX->y = t.max.y; }
         if (t.max.z > CUBE_GLOBAL_MAX->z) { CUBE_GLOBAL_MAX->z = t.max.z; }
@@ -255,7 +261,7 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
                     //printf("%d %d %d %f %f\n", k, z_amt, dz, t.z, curr_cube->min.z);
                     //printf("%f %f %f\n", t.x, t.y, t.z);
                     curr_cube->points[cnt].pos = t;
-                    curr_cube->points[cnt].energy[0] = 0;
+                    curr_cube->points[cnt].energy[0] = 0;     //non serve inizializzare se il kernel dell'energia non somma
                     curr_cube->points[cnt].energy[N_STEPS] = 0;
                     cnt++;
                 }
@@ -264,6 +270,31 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
     }
     curr_cube->point_amt = cnt;
     return;
+}
+
+int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_point* points,int minz,int maxz,int offset){
+    int x_amt = (p2.x - p1.x) / resolution.x;
+    int y_amt = (p2.y - p1.y) / resolution.y;
+    int z_amt = (maxz - minz) / resolution.z;
+    point3d t;
+    int cnt = offset;
+
+    for(int i = 0; i < x_amt; i++){
+        for(int j = 0; j < y_amt; j++){
+            for(int k = 0; k < z_amt; k++){
+                t.x = p1.x + i * resolution.x;
+                t.y = p1.y + j * resolution.y;
+                t.z = minz + k * resolution.z;
+
+                points[cnt].pos = t;
+                points[cnt].energy[0] = 0;     //non serve se il kernel dell'energia non somma
+                points[cnt].energy[N_STEPS] = 0;
+                cnt++;
+            }
+        }
+    }
+    return cnt;
+
 }
 
 
@@ -295,7 +326,7 @@ void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution,
     initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, *dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->N, curr_cube->max.z);
     //cudaMemcpy(curr_cube->points, dev_points, curr_cube->point_amt * sizeof(energy_point), cudaMemcpyDeviceToHost);
     // free structures
-    cudaFree(dev_limits); 
+    cudaFree(dev_limits);
 
     //return *dev_points;
 }

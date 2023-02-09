@@ -123,12 +123,25 @@ int main() {  //pass file name and parameters through command line
             printf("Raggio nel cubo %d - ", cube_index);
             fprintf(fout, "%d\n", cube_index);
 
-            // POINTS GENERATION
-            //energy_point *dev_point_ens;
-            generate_points_by_resolution_parallel(&cubes[cube_index], res,&dev_point_ens);
-            //cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
-            //cube currcube=cubes[cube_index];
-            //generate_points_by_resolution(&currcube,res);
+            // POINTS GENERATION   //point_amt=somma su tutti i rettangoli, alloca preciso
+            int x_amt = (cubes[cube_index].max.x - cubes[cube_index].min.x) / res.x;
+            int y_amt = (cubes[cube_index].max.y - cubes[cube_index].min.y) / res.y;
+            int z_amt = (cubes[cube_index].max.z - cubes[cube_index].min.z) / res.z;
+            //cubes[cube_index].point_amt=x_amt * y_amt * z_amt;
+            cubes[cube_index].points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));
+            int offset=0;
+            for(int rect_index=0;rect_index<cubes[cube_index].rectN;rect_index++){
+                point2d p1=cubes[cube_index].rects[rect_index];
+                point2d p2=cubes[cube_index].rects[++rect_index];
+                offset=generate_points_in_rect(p1,p2,res,cubes[cube_index].points,
+                                               cubes[cube_index].min.z,cubes[cube_index].max.z,offset);
+            }
+            cubes[cube_index].point_amt=offset;
+            cudaMalloc(&dev_point_ens,offset*sizeof(energy_point));
+            cudaError_t check=cudaMemcpy((void*) dev_point_ens,(void*) cubes[cube_index].points,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyHostToDevice);
+            printf("%s",cudaGetErrorString(check));
+            //generate_points_by_resolution_parallel(&cubes[cube_index], res,&dev_point_ens);
+            //generate_points_by_resolution(&cubes[cube_index],res);
 #if COMPARE
             clock_t begin = clock();
 #endif
@@ -146,9 +159,9 @@ int main() {  //pass file name and parameters through command line
                     fprintf(fout, ",%f", cubes[cube_index].points[point_index].energy[step]);
                 }
                 fprintf(fout, "\n");
-                if(!(cubes[cube_index].points[point_index].pos.x==0 && cubes[cube_index].points[point_index].pos.y==0 &&cubes[cube_index].points[point_index].pos.z==0)) {
+                //if(!(cubes[cube_index].points[point_index].pos.x==0 && cubes[cube_index].points[point_index].pos.y==0 &&cubes[cube_index].points[point_index].pos.z==0)) {
                     cube_energy += cubes[cube_index].points[point_index].energy[N_STEPS];
-                }
+                //}
             }
 #if COMPARE
             clock_t end = clock();

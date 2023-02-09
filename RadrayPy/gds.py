@@ -73,6 +73,9 @@ def read_gds(path):
                     fout.write(str(layers_cube[cu_layer][index_cube][0][2]) +' '+ str(layers_cube[cu_layer][index_cube][0][5])+ "\n")
                     for vertex in layers_cube[cu_layer][index_cube][0:index_vertex-1]:
                         fout.write(' '.join([str(_) for _ in [*vertex[0:2]]]) + "\n")
+                    rects = divide_in_rects([(_[0],_[1]) for _ in layers_cube[cu_layer][index_cube][0:index_vertex-1]])
+                    fout.write(str(len(rects)//2)+'\n')
+                    fout.write(' '.join([str(_) for _ in rects])+'\n')
                     #print(layers_cube)
                     index_cube = index_cube + 1
                     index_vertex = 0
@@ -111,6 +114,35 @@ def read_gds(path):
     print('-- Done')
     
     return layers_cube, layer_list, vertex_cube_list
+
+def divide_in_rects(points):
+    p = sorted([_ for _ in points], key=lambda x: (x[0], x[1]))
+    rects = []
+    d = dict()
+    i = 0
+    p1 = p[i]
+    d[p1[1]] = 1
+    for p2 in p[1:]:
+        if p2[0] != p1[0]:
+            j = 0
+            borderpoint = []
+            for y in sorted(list(d.keys())):
+                if d[y] % 2 == 1:
+                    if j == 0:
+                        borderpoint.append(p1[0])
+                        borderpoint.append(y)
+                    else:
+                        borderpoint.append(p2[0])
+                        borderpoint.append(y)
+                        rects+=borderpoint
+                        borderpoint = []
+                    j = not j
+        if p2[1] not in d:
+            d[p2[1]] = 1
+        else:
+            d[p2[1]] += 1
+        p1 = p2
+    return rects
 
 def generate_cubes(vertex_cube_list, ax_1,file_coord):
     index_cube = 0
