@@ -24,7 +24,7 @@ __global__ void compute_energies(energy_point_s* dev_point_ens,ray* dev_ray_traj
                                   pow(dev_point_ens[tid].pos.y - curr_ray_pos.y, 2) +
                                   pow(dev_point_ens[tid].pos.z - curr_ray_pos.z, 2));
 
-            bell_value = ((1 / (2.506628274631 * 130.0)) * (double)exp(-0.5 * (double)pow((1 / 130.0 * (point_ray_dist/10 - 0)), 2)));
+            bell_value = ((1 / (2.506628274631 * 130.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
             /*if(tid==0 && step==0){  //to be activated for debugging purposes
                 printf("distance: %f bell: %lf\n",point_ray_dist,bell_value);
             }*/
@@ -62,7 +62,7 @@ __global__ void compute_energies_fully_parallel(energy_point_s* dev_point_ens,ra
                                  pow(dev_point_ens[point_index].pos.y - curr_ray_pos.y, 2) +
                                  pow(dev_point_ens[point_index].pos.z - curr_ray_pos.z, 2));
 
-        bell_value = ((1 / (2.506628274631 * 130.0)) * (double)exp(-0.5 * (double)pow((1 / 130.0 * (point_ray_dist/10 - 0)), 2)));
+        bell_value = ((1 / (2.506628274631 * 130.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
 
         dev_point_ens[point_index].energy[en_index+1] =bell_value*dev_ray_traj->energy_curve[en_index];
     }
@@ -132,7 +132,6 @@ int main() {  //pass file name and parameters through command line
         if(cube_contains_ray(cubes[cube_index], ray_traj)){
             cube_energy_parallel = 0;
             printf("Raggio nel cubo %d - ", cube_index);
-            fprintf(fout_par, "%d\n", cube_index);
 
             // POINTS GENERATION
 
@@ -153,12 +152,9 @@ int main() {  //pass file name and parameters through command line
             cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
-                fprintf(fout_par, "%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
                 for (int step=1; step <= N_STEPS; step++) {
                     cubes[cube_index].points[point_index].energy[step]+=cubes[cube_index].points[point_index].energy[step-1];
-                    fprintf(fout_par, ",%f", cubes[cube_index].points[point_index].energy[step]);
                 }
-                fprintf(fout_par, "\n");
                 if(!(cubes[cube_index].points[point_index].pos.x==0 && cubes[cube_index].points[point_index].pos.y==0 &&cubes[cube_index].points[point_index].pos.z==0)) {
                     cube_energy_parallel += cubes[cube_index].points[point_index].energy[N_STEPS];
                 }
@@ -166,6 +162,8 @@ int main() {  //pass file name and parameters through command line
             printf("Energy %f\n", cube_energy_parallel);
         }
     }
+
+    write_on_file(fout_par, cubes, cube_number, ray_traj);
         
 #if COMPARE
     clock_t end_par = clock();
@@ -189,11 +187,9 @@ int main() {  //pass file name and parameters through command line
 
         // if the ray pass through the current cube we generate the points (atoms) and compute the energy
         if(cube_contains_ray(cubes[cube_index], ray_traj)){
+
             cube_energy_sequential = 0;
             printf("Raggio nel cubo %d - ", cube_index);
-            fprintf(fout_seq, "%d\n", cube_index);
-
-            cube_energy_sequential=0;
 
             generate_points_by_resolution(&cubes[cube_index],res);
 
@@ -203,7 +199,7 @@ int main() {  //pass file name and parameters through command line
                         point_ray_dist = distance(cubes[cube_index].points[point_index].pos, curr_ray_pos);
                         cubes[cube_index].points[point_index].energy[step + 1] =
                                 cubes[cube_index].points[point_index].energy[step] +
-                                bell(0, 130, point_ray_dist/10) *
+                                bell(0, 13, point_ray_dist/10) *
                                 ray_traj.energy_curve[step];  //1000 *
 
                         curr_ray_pos.x += ray_traj.delta.x;
@@ -211,14 +207,15 @@ int main() {  //pass file name and parameters through command line
                         curr_ray_pos.z += ray_traj.delta.z;
                     }
 
-                fprintf(fout_seq, "%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
-                for (int step=1; step <= N_STEPS; step++) fprintf(fout_seq, ",%f", cubes[cube_index].points[point_index].energy[step]);
-                fprintf(fout_seq, "\n");
+                //printf("%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
                 cube_energy_sequential += cubes[cube_index].points[point_index].energy[N_STEPS];
             }
             printf("Energy %f\n", cube_energy_sequential);
         }
     }
+
+    // writing on file sequential informations
+    write_on_file(fout_seq, cubes, cube_number, ray_traj);
 
     clock_t end_seq = clock();
 
@@ -236,7 +233,6 @@ int main() {  //pass file name and parameters through command line
     cudaFree(dev_point_ens);
     cudaFree(dev_ray_traj);
     free_cubes(cubes, cube_number);
-    //fclose(fin);
     fclose(fout_par);
     fclose(fout_seq);
 

@@ -52,5 +52,6 @@ void free_cube(cube *cu);
 void free_cubes(cube *c_arr, int n);
 void generate_rays(ray ray_arr[], ray main_ray, int amount);
 int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE_GLOBAL_MIN);
+void write_on_file(FILE *fout, cube *cubes, int cube_number, ray ray_traj);
 
 #endif

@@ -347,3 +347,25 @@ void generate_rays(ray ray_arr[], ray main_ray, int amount) {
 }
 
 
+void write_on_file(FILE *fout, cube *cubes, int cube_number, ray ray_traj) {
+
+    // for each cube in the system
+    for(int cube_index = 0; cube_index < cube_number; cube_index++) {
+        // if the ray passed in that cube
+        if(cube_contains_ray(cubes[cube_index], ray_traj)) {
+            // write cube number in file
+            fprintf(fout, "%d\n", cube_index);
+            // for each point in the current cube  
+            for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
+                // print his coordinates
+                fprintf(fout, "%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
+                // for each step of the simulation
+                for (int step=1; step <= N_STEPS; step++) {
+                    fprintf(fout, ",%f", cubes[cube_index].points[point_index].energy[step]);
+                }
+                fprintf(fout, "\n");
+            }
+        }  
+    }
+    
+}
