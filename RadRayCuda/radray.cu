@@ -300,11 +300,9 @@ int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_poin
 
 /* Generates the points inside a cube with a given resolution, it directly returns the pointer to the points vector in the GPU so that we don't need to
    copy it back to host and again to the GPU */
-void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution,energy_point** dev_points){
+void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution, energy_point** dev_points){
 
     // data structures used
-    //point3d t;
-    //int cnt = 0;
     int dx = resolution.x;
     int dy = resolution.y;
     int dz = resolution.z;
@@ -313,7 +311,6 @@ void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution,
     int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
     curr_cube->point_amt = x_amt*y_amt*z_amt;
     point2d *dev_limits;
-    //energy_point *dev_points;
     curr_cube->points = (energy_point *) malloc(curr_cube->point_amt * sizeof(energy_point));  //nvcc vuole il cast
 
     // blocks needed to cover all possible points
@@ -324,7 +321,6 @@ void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution,
     // copy of limits array
     cudaMemcpy(dev_limits, curr_cube->limits, curr_cube->N * sizeof(point2d), cudaMemcpyHostToDevice);
     initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, *dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->N, curr_cube->max.z);
-    //cudaMemcpy(curr_cube->points, dev_points, curr_cube->point_amt * sizeof(energy_point), cudaMemcpyDeviceToHost);
     // free structures
     cudaFree(dev_limits);
 
@@ -382,3 +378,25 @@ void generate_rays(ray ray_arr[], ray main_ray, int amount) {
 }
 
 
+void write_on_file(FILE *fout, cube *cubes, int cube_number, ray ray_traj) {
+
+    // for each cube in the system
+    for(int cube_index = 0; cube_index < cube_number; cube_index++) {
+        // if the ray passed in that cube
+        if(cube_contains_ray(cubes[cube_index], ray_traj)) {
+            // write cube number in file
+            fprintf(fout, "%d\n", cube_index);
+            // for each point in the current cube  
+            for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
+                // print his coordinates
+                fprintf(fout, "%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
+                // for each step of the simulation
+                for (int step=1; step <= N_STEPS; step++) {
+                    fprintf(fout, ",%f", cubes[cube_index].points[point_index].energy[step]);
+                }
+                fprintf(fout, "\n");
+            }
+        }  
+    }
+    
+}

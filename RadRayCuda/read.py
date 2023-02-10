@@ -12,7 +12,7 @@ ev = []
 affected_cubes = []
 rays = []
 
-with open("./out.txt", "r") as fin:
+with open("./out_seq.txt", "r") as fin:
     # reading the rays
     nrays = int(fin.readline().strip())
     for i in range(nrays):
