@@ -20,6 +20,11 @@ typedef struct energy_point_s{
     double energy[N_STEPS + 1];  //[N_STEPS]
 }energy_point;
 
+typedef struct rectangle_s {
+    point2d p1, p2;
+    int offset;
+}rectangle;
+
 typedef struct cube_s{
     point2d* limits;
     int N;
@@ -29,8 +34,9 @@ typedef struct cube_s{
     energy_point* points;
     int point_amt;
     int rectN;
-    point2d* rects;
+    rectangle* rects;
 }cube;
+
 
 typedef struct ray_s{
     point3d start;
@@ -56,6 +62,7 @@ void generate_rays(ray ray_arr[], ray main_ray, int amount);
 int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE_GLOBAL_MIN);
 void write_on_file(FILE *fout, cube *cubes, int cube_number, ray ray_traj);
 
+energy_point* generate_points_in_rect_parallel(cube *curr_cube, point3d resolution);
 int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_point* points,int minz,int maxz,int offset);
 
 #endif

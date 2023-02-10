@@ -64,6 +64,53 @@ __global__ void initialize_points(point2d *limits, energy_point *points, int x_a
 }
 
 
+/* Kernel that initialize all points in a cube, first check in which rectangle it's initializing and then initialize using it's var
+*/
+__global__ void initialize_points_rectangles(energy_point *points, rectangle *rect, int rectN, float minz, float maxz, int point_amt, point3d resolution) {
+
+    int tid = blockDim.x*blockIdx.x+threadIdx.x;
+    int offset = -1;
+    int r = -1;
+
+    if (tid<point_amt) {
+
+        for (int i=0; i<rectN-1; i++) {
+            if( tid>=rect[i].offset && tid<rect[i+1].offset ) {
+                offset = rect[i].offset;
+                r = i;
+                break;
+            }   
+        }
+        if (offset==-1) {
+            offset = rect[rectN-1].offset; 
+            r = rectN-1;
+        }
+
+        tid -= offset;
+
+        int x_amt = (rect[r].p2.x - rect[r].p1.x) / resolution.x;
+        int y_amt = (rect[r].p2.y - rect[r].p1.y) / resolution.y;
+        int z_amt = (maxz - minz) / resolution.z;
+        int x=tid/(y_amt*z_amt);
+        int y=(tid%(y_amt*z_amt))/z_amt;
+        int z=tid%z_amt;
+        point3d t;
+
+        // with this condition we exclude the thread in excess
+        if (tid<(x_amt*y_amt*z_amt)) {   //tid<(x_amt*y_amt*z_amt)
+            t.x = rect[r].p1.x + x * resolution.x;
+            t.y = rect[r].p1.y + y * resolution.y;
+            t.z = minz + z * resolution.z;
+            points[tid].pos = t;
+            points[tid].energy[0] = 0;
+            points[tid].energy[N_STEPS] = 0;
+        }
+    
+    }
+
+}
+
+
 int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE_GLOBAL_MIN){
     FILE* fin;
     cube t;
@@ -103,9 +150,10 @@ int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE
         }
         //read rectangles that divide the polygon
         fscanf(fin, "%d",&t.rectN);
-        t.rects=(point2d *) malloc(t.rectN * sizeof(point2d));
+        t.rectN = t.rectN/2;
+        t.rects=(rectangle *) malloc(t.rectN * sizeof(rectangle));
         for(i=0;i<t.rectN;i++){
-            fscanf(fin, "%f %f", &(t.rects[i].x), &t.rects[i].y);
+            fscanf(fin, "%f %f %f %f", &(t.rects[i].p1.x), &(t.rects[i].p1.y), &(t.rects[i].p2.x), &(t.rects[i].p2.y));
         }
         if (t.max.x > CUBE_GLOBAL_MAX->x) { CUBE_GLOBAL_MAX->x = t.max.x; }  // computes global max and min, in which the ray must pass
         if (t.max.y > CUBE_GLOBAL_MAX->y) { CUBE_GLOBAL_MAX->y = t.max.y; }
@@ -272,7 +320,9 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
     return;
 }
 
+
 int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_point* points,int minz,int maxz,int offset){
+
     int x_amt = (p2.x - p1.x) / resolution.x;
     int y_amt = (p2.y - p1.y) / resolution.y;
     int z_amt = (maxz - minz) / resolution.z;
@@ -293,7 +343,24 @@ int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_poin
             }
         }
     }
+    
     return cnt;
+
+}
+
+energy_point* generate_points_in_rect_parallel(cube *curr_cube, point3d resolution) {
+
+
+    energy_point *dev_points;
+    rectangle *dev_rects;
+    int nblocks = (curr_cube->point_amt)/MAX_THREADS+1;
+
+    cudaMalloc( (void**) &dev_points, curr_cube->point_amt * sizeof(energy_point));
+    cudaMalloc( (void**) &dev_rects, curr_cube->rectN * sizeof(rectangle));
+    cudaMemcpy(dev_rects, curr_cube->rects, curr_cube->rectN * sizeof(rectangle), cudaMemcpyHostToDevice);
+    initialize_points_rectangles<<<nblocks,MAX_THREADS>>>(dev_points, dev_rects, curr_cube->rectN, curr_cube->min.z, curr_cube->max.z, curr_cube->point_amt, resolution);
+
+    return dev_points;
 
 }
 

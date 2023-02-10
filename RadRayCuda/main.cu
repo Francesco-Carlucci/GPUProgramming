@@ -99,7 +99,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {6, 6, 6};
+    point3d res = {10, 10, 10};
     float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy_sequential, cube_energy_parallel;
@@ -133,28 +133,39 @@ int main() {  //pass file name and parameters through command line
             cube_energy_parallel = 0;
             printf("Raggio nel cubo %d - ", cube_index);
 
-            // POINTS GENERATION   //point_amt=somma su tutti i rettangoli, alloca preciso
+            // POINTS GENERATION  
+
+#ifdef POINT_GEN_PAR 
+
+            //point_amt=somma su tutti i rettangoli, alloca preciso
             int x_amt = (cubes[cube_index].max.x - cubes[cube_index].min.x) / res.x;
             int y_amt = (cubes[cube_index].max.y - cubes[cube_index].min.y) / res.y;
             int z_amt = (cubes[cube_index].max.z - cubes[cube_index].min.z) / res.z;
             //cubes[cube_index].point_amt=x_amt * y_amt * z_amt;
             cubes[cube_index].points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));
             int offset=0;
-            for(int rect_index=0;rect_index<cubes[cube_index].rectN;rect_index++){
-                point2d p1=cubes[cube_index].rects[rect_index];
-                point2d p2=cubes[cube_index].rects[++rect_index];
-                offset=generate_points_in_rect(p1,p2,res,cubes[cube_index].points,
-                                               cubes[cube_index].min.z,cubes[cube_index].max.z,offset);
+            cubes[cube_index].rects[0].offset = 0;
+            // for each triangle we compute the number of points and obtain the offset that its points will have in vector points
+            for(int rect_index=1; rect_index<cubes[cube_index].rectN; rect_index++){
+                point2d p1 = cubes[cube_index].rects[rect_index-1].p1;
+                point2d p2 = cubes[cube_index].rects[rect_index-1].p2;
+                x_amt = (p2.x - p1.x) / res.x;
+                y_amt = (p2.y - p1.y) / res.y;
+                z_amt = (cubes[cube_index].max.z - cubes[cube_index].min.z) / res.z;
+                cubes[cube_index].rects[rect_index].offset = cubes[cube_index].rects[rect_index-1].offset + x_amt*y_amt*z_amt;
             }
-            cubes[cube_index].point_amt=offset;
-            cudaMalloc(&dev_point_ens,offset*sizeof(energy_point));
-            cudaError_t check=cudaMemcpy((void*) dev_point_ens,(void*) cubes[cube_index].points,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyHostToDevice);
-            printf("%s",cudaGetErrorString(check));
-            //generate_points_by_resolution_parallel(&cubes[cube_index], res,&dev_point_ens);
-            //generate_points_by_resolution(&cubes[cube_index],res);
-#if COMPARE
-            clock_t begin = clock();
+            // we compute the total number of points used to allocate dev_points
+            point2d p1 = cubes[cube_index].rects[cubes[cube_index].rectN-1].p1;
+            point2d p2 = cubes[cube_index].rects[cubes[cube_index].rectN-1].p2;
+            x_amt = (p2.x - p1.x) / res.x;
+            y_amt = (p2.y - p1.y) / res.y;
+            z_amt = (cubes[cube_index].max.z - cubes[cube_index].min.z) / res.z;
+            cubes[cube_index].point_amt = cubes[cube_index].rects[cubes[cube_index].rectN-1].offset + x_amt*y_amt*z_amt;
+
+            dev_point_ens = generate_points_in_rect_parallel(&(cubes[cube_index]), res);
+
 #endif
+
 #ifndef POINT_GEN_PAR
             generate_points_by_resolution(&cubes[cube_index], res);
             cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
@@ -184,7 +195,7 @@ int main() {  //pass file name and parameters through command line
     clock_t end_par = clock();
 #endif
 
-    // write_on_file(fout_par, cubes, cube_number, ray_traj);
+    //write_on_file(fout_par, cubes, cube_number, ray_traj);
 
     // ################################################## SIMULATION SEQUENTIAL ############################################
 
@@ -207,7 +218,17 @@ int main() {  //pass file name and parameters through command line
             cube_energy_sequential = 0;
             printf("Raggio nel cubo %d - ", cube_index);
 
-            generate_points_by_resolution(&cubes[cube_index],res);
+            //point_amt=somma su tutti i rettangoli, alloca preciso
+            int x_amt = (cubes[cube_index].max.x - cubes[cube_index].min.x) / res.x;
+            int y_amt = (cubes[cube_index].max.y - cubes[cube_index].min.y) / res.y;
+            int z_amt = (cubes[cube_index].max.z - cubes[cube_index].min.z) / res.z;
+            //cubes[cube_index].point_amt=x_amt * y_amt * z_amt;
+            cubes[cube_index].points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));
+            int offset=0;
+            for(int rect_index=0; rect_index<cubes[cube_index].rectN; rect_index++){
+                offset=generate_points_in_rect(cubes[cube_index].rects[rect_index].p1, cubes[cube_index].rects[rect_index].p2, res, cubes[cube_index].points, cubes[cube_index].min.z, cubes[cube_index].max.z, offset);
+            }
+            cubes[cube_index].point_amt=offset;
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                     curr_ray_pos = ray_traj.start;
@@ -234,7 +255,7 @@ int main() {  //pass file name and parameters through command line
     clock_t end_seq = clock();
 
     // writing on file sequential informations
-    // write_on_file(fout_seq, cubes, cube_number, ray_traj);
+    //write_on_file(fout_seq, cubes, cube_number, ray_traj);
 
     double sequential_time = (double) (end_seq - begin_seq) / CLOCKS_PER_SEC;
     double parallel_time =(double) (end_par - begin_par) / CLOCKS_PER_SEC;
@@ -243,7 +264,7 @@ int main() {  //pass file name and parameters through command line
     printf("Sequential computation: %f\n",sequential_time);
     printf("Speedup= %.2f %% \n",(1-parallel_time/sequential_time)*100);
 
-    #endif
+#endif
 
     // FREE DATA STRUCTURES AND CLOSE FILES
 
