@@ -86,18 +86,18 @@ __global__ void initialize_points_rectangles(energy_point *points, rectangle *re
             r = rectN-1;
         }
 
-        tid -= offset;
+        int tid_off = tid-offset;
 
         int x_amt = (rect[r].p2.x - rect[r].p1.x) / resolution.x;
         int y_amt = (rect[r].p2.y - rect[r].p1.y) / resolution.y;
         int z_amt = (maxz - minz) / resolution.z;
-        int x=tid/(y_amt*z_amt);
-        int y=(tid%(y_amt*z_amt))/z_amt;
-        int z=tid%z_amt;
+        int x=tid_off/(y_amt*z_amt);
+        int y=(tid_off%(y_amt*z_amt))/z_amt;
+        int z=tid_off%z_amt;
         point3d t;
 
         // with this condition we exclude the thread in excess
-        if (tid<(x_amt*y_amt*z_amt)) {   //tid<(x_amt*y_amt*z_amt)
+        if (tid_off<(x_amt*y_amt*z_amt)) {   //tid_off<(x_amt*y_amt*z_amt)
             t.x = rect[r].p1.x + x * resolution.x;
             t.y = rect[r].p1.y + y * resolution.y;
             t.z = minz + z * resolution.z;

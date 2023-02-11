@@ -3,7 +3,7 @@
 #include <time.h>
 
 #define COMPARE 1
-//#define POINT_GEN_PAR
+#define POINT_GEN_PAR
 
 #include "3dmisc.h"
 #include "radray.h"
@@ -229,6 +229,7 @@ int main() {  //pass file name and parameters through command line
                 offset=generate_points_in_rect(cubes[cube_index].rects[rect_index].p1, cubes[cube_index].rects[rect_index].p2, res, cubes[cube_index].points, cubes[cube_index].min.z, cubes[cube_index].max.z, offset);
             }
             cubes[cube_index].point_amt=offset;
+            printf("%d - ", cubes[cube_index].point_amt);
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                     curr_ray_pos = ray_traj.start;
