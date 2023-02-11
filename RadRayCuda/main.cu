@@ -217,7 +217,6 @@ int main() {  //pass file name and parameters through command line
 
             cube_energy_sequential = 0;
             printf("Raggio nel cubo %d - ", cube_index);
-
             //point_amt=somma su tutti i rettangoli, alloca preciso
             int x_amt = (cubes[cube_index].max.x - cubes[cube_index].min.x) / res.x;
             int y_amt = (cubes[cube_index].max.y - cubes[cube_index].min.y) / res.y;
@@ -229,7 +228,6 @@ int main() {  //pass file name and parameters through command line
                 offset=generate_points_in_rect(cubes[cube_index].rects[rect_index].p1, cubes[cube_index].rects[rect_index].p2, res, cubes[cube_index].points, cubes[cube_index].min.z, cubes[cube_index].max.z, offset);
             }
             cubes[cube_index].point_amt=offset;
-            printf("%d - ", cubes[cube_index].point_amt);
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                     curr_ray_pos = ray_traj.start;

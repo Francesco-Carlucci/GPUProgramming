@@ -1,0 +1,94 @@
+EXECUTION WITH PARALLEL POINT GENERATION ################################################################################################################
+
+PARALLEL:
+Raggio nel cubo 0 - Energy 9324.484375
+Raggio nel cubo 3 - Energy 8558.897461
+Raggio nel cubo 5 - Energy 24623.634766
+Raggio nel cubo 9 - Energy 1875.425171
+
+SEQUENTIAL:
+Raggio nel cubo 0 - 157872 - Energy 9324.479492
+Raggio nel cubo 3 - 114540 - Energy 8558.890625
+Raggio nel cubo 5 - 230048 - Energy 24623.623047
+Raggio nel cubo 9 - 11895 - Energy 1875.423828
+
+Parallelized computation: 1.390012
+Sequential computation: 7.529693
+Speedup= 81.54 % 
+==9423== Profiling application: ./main.exe
+==9423== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   79.26%  950.69ms         4  237.67ms  21.364ms  412.73ms  compute_energies_fully_parallel(energy_point_s*, ray_s*, int)
+                   20.59%  246.93ms         4  61.733ms  5.9386ms  110.30ms  [CUDA memcpy DtoH]
+                    0.15%  1.8532ms         4  463.30us  44.960us  810.44us  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s)
+                    0.00%  6.2730us         5  1.2540us     928ns  1.3770us  [CUDA memcpy HtoD]
+      API calls:   91.69%  1.20190s         9  133.54ms  7.0190us  524.28ms  cudaMemcpy
+                    8.23%  107.90ms         9  11.989ms  4.0100us  106.88ms  cudaMalloc
+                    0.03%  393.41us         1  393.41us  393.41us  393.41us  cuDeviceGetPCIBusId
+                    0.02%  315.55us       101  3.1240us     169ns  188.50us  cuDeviceGetAttribute
+                    0.01%  170.03us         2  85.016us  8.6730us  161.36us  cudaFree
+                    0.01%  97.241us         8  12.155us  4.8010us  21.972us  cudaLaunchKernel
+                    0.01%  72.338us         1  72.338us  72.338us  72.338us  cuDeviceGetName
+                    0.00%  2.2190us         3     739ns     254ns  1.6830us  cuDeviceGetCount
+                    0.00%  1.0090us         2     504ns     184ns     825ns  cuDeviceGet
+                    0.00%     482ns         1     482ns     482ns     482ns  cuDeviceTotalMem
+                    0.00%     422ns         1     422ns     422ns     422ns  cuDeviceGetUuid
+                    0.00%     331ns         1     331ns     331ns     331ns  cuModuleGetLoadingMode
+
+
+EXECUTION WITH SEQUENTIAL POINT GENERATION ################################################################################################################
+
+PARALLEL:
+Raggio nel cubo 0 - Energy 9324.449219
+Raggio nel cubo 3 - Energy 8558.861328
+Raggio nel cubo 5 - Energy 25139.869141
+Raggio nel cubo 9 - Energy 1882.219360
+
+SEQUENTIAL:
+Raggio nel cubo 0 - 157872 - Energy 9324.479492
+Raggio nel cubo 3 - 114540 - Energy 8558.890625
+Raggio nel cubo 5 - 230048 - Energy 24623.623047
+Raggio nel cubo 9 - 11895 - Energy 1875.423828
+
+Parallelized computation: 1.807276
+Sequential computation: 7.532267
+Speedup= 76.01 % 
+==9641== Profiling application: ./main.exe
+==9641== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   65.98%  953.34ms         4  238.33ms  21.842ms  416.55ms  compute_energies_fully_parallel(energy_point_s*, ray_s*, int)
+                   17.02%  245.86ms         5  49.172ms  1.2800us  110.69ms  [CUDA memcpy HtoD]
+                   17.00%  245.69ms         4  61.422ms  6.0393ms  110.49ms  [CUDA memcpy DtoH]
+      API calls:   93.74%  1.44568s         9  160.63ms  23.725us  527.74ms  cudaMemcpy
+                    6.20%  95.553ms         5  19.111ms  159.86us  94.533ms  cudaMalloc
+                    0.03%  507.11us         2  253.55us  145.15us  361.96us  cudaFree
+                    0.02%  282.99us       101  2.8010us     121ns  175.44us  cuDeviceGetAttribute
+                    0.01%  79.747us         4  19.936us  18.297us  21.749us  cudaLaunchKernel
+                    0.00%  63.638us         1  63.638us  63.638us  63.638us  cuDeviceGetName
+                    0.00%  9.0920us         1  9.0920us  9.0920us  9.0920us  cuDeviceGetPCIBusId
+                    0.00%  1.4760us         3     492ns     196ns     975ns  cuDeviceGetCount
+                    0.00%     578ns         2     289ns     161ns     417ns  cuDeviceGet
+                    0.00%     549ns         1     549ns     549ns     549ns  cuModuleGetLoadingMode
+                    0.00%     316ns         1     316ns     316ns     316ns  cuDeviceTotalMem
+                    0.00%     228ns         1     228ns     228ns     228ns  cuDeviceGetUuid
+
+
+ADVANTAGES:
+
+-   with the parallelization of points we can avoid copying to the GPU the whole points vector since it is directly initialized on the GPU, we just need to pass his
+    pointer to the next kernel. This improvement can clearly be seen looking at the difference in the time taken from the memcpy HtoD.
+-   
+
+
+TIME COMPARISON OF SINGLE FUNCTIONS ##########################################################################################################################################
+( numbers taken from points gen in cube5 with 10,10,10 resolution )
+
+Sequential generation of points without rectangles: 0.082443
+    - with cudamalloc and memcpy: 0.193250
+
+Sequential generation of points with rectangles: 0.065076
+
+Parallel generation of points with rectangles: 0.000379
+
+As it's possible to see the introduction of rectangles improved by itself the performance of the program, moreover its parallel version is able to drastically decrese the time taken
+from the points generation
