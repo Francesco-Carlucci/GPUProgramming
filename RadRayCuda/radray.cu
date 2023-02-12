@@ -64,7 +64,11 @@ __global__ void initialize_points(point2d *limits, energy_point *points, int x_a
 }
 
 
-/* Kernel that initialize all points in a cube, first check in which rectangle it's initializing and then initialize using it's var
+/* Kernel that initialize all points in a cube, we have as many thread as the points in the cube, each thread initialize a point in the cube. To avoid the creation
+of empty spaces when there are complex polygons we exploit the division in rectangles. Each thread permorms the following operations:
+    - check in which rectangle it is initializing
+    - subtract offset to tid
+    - apply algorithm for point generation in a 3d matrix
 */
 __global__ void initialize_points_rectangles(energy_point *points, rectangle *rect, int rectN, float minz, float maxz, int point_amt, point3d resolution) {
 
@@ -72,8 +76,10 @@ __global__ void initialize_points_rectangles(energy_point *points, rectangle *re
     int offset = -1;
     int r = -1;
 
+    // we need this to exclude the threads in excess
     if (tid<point_amt) {
 
+        // for on vector of rectangles to find which one we are now initializing
         for (int i=0; i<rectN-1; i++) {
             if( tid>=rect[i].offset && tid<rect[i+1].offset ) {
                 offset = rect[i].offset;
@@ -81,13 +87,16 @@ __global__ void initialize_points_rectangles(energy_point *points, rectangle *re
                 break;
             }   
         }
+        // if we never modified offset it means we are in the last rectangle
         if (offset==-1) {
             offset = rect[rectN-1].offset; 
             r = rectN-1;
         }
 
+        // we subtract offset from tid
         int tid_off = tid-offset;
 
+        // we run the algorithm to initialize the point in the rectangles
         int x_amt = (rect[r].p2.x - rect[r].p1.x) / resolution.x;
         int y_amt = (rect[r].p2.y - rect[r].p1.y) / resolution.y;
         int z_amt = (maxz - minz) / resolution.z;
@@ -95,16 +104,13 @@ __global__ void initialize_points_rectangles(energy_point *points, rectangle *re
         int y=(tid_off%(y_amt*z_amt))/z_amt;
         int z=tid_off%z_amt;
         point3d t;
-
-        // with this condition we exclude the thread in excess
-        if (tid_off<(x_amt*y_amt*z_amt)) {   //tid_off<(x_amt*y_amt*z_amt)
-            t.x = rect[r].p1.x + x * resolution.x;
-            t.y = rect[r].p1.y + y * resolution.y;
-            t.z = minz + z * resolution.z;
-            points[tid].pos = t;
-            points[tid].energy[0] = 0;
-            points[tid].energy[N_STEPS] = 0;
-        }
+        t.x = rect[r].p1.x + x * resolution.x;
+        t.y = rect[r].p1.y + y * resolution.y;
+        t.z = minz + z * resolution.z;
+        // when we save the value we use original tid
+        points[tid].pos = t;
+        points[tid].energy[0] = 0;
+        points[tid].energy[N_STEPS] = 0;
     
     }
 
@@ -304,10 +310,7 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
                 t.x = curr_cube->min.x + i * dx;
                 t.y = curr_cube->min.y + j * dy;
                 t.z = curr_cube->min.z + k * dz;
-                //printf("%f %f %f\n", t.x, t.y, t.z);
                 if (point_in_polygon(*curr_cube, t)) {
-                    //printf("%d %d %d %f %f\n", k, z_amt, dz, t.z, curr_cube->min.z);
-                    //printf("%f %f %f\n", t.x, t.y, t.z);
                     curr_cube->points[cnt].pos = t;
                     curr_cube->points[cnt].energy[0] = 0;     //non serve inizializzare se il kernel dell'energia non somma
                     curr_cube->points[cnt].energy[N_STEPS] = 0;
@@ -320,7 +323,7 @@ void generate_points_by_resolution(cube *curr_cube, point3d resolution){  //gene
     return;
 }
 
-
+/* Functions that generates the points inside a rectangle in a sequential way */
 int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_point* points,int minz,int maxz,int offset){
 
     int x_amt = (p2.x - p1.x) / resolution.x;
@@ -348,8 +351,10 @@ int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_poin
 
 }
 
-energy_point* generate_points_in_rect_parallel(cube *curr_cube, point3d resolution) {
 
+
+/* Function that receives as an input a cube and a reslution and it gives back the energy_point vector initialized */
+energy_point* generate_points_in_rect_parallel(cube *curr_cube, point3d resolution) {
 
     energy_point *dev_points;
     rectangle *dev_rects;
@@ -395,7 +400,6 @@ void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution,
 }
 
 
-
 void free_cube(cube *cu) {
     if(cu->points!=NULL){
         free(cu->points);
@@ -404,12 +408,14 @@ void free_cube(cube *cu) {
     return;
 }
 
+
 void free_cubes(cube *c_arr, int n) {
     for (int i = 0; i < n; i++) {
         free_cube(&c_arr[i]);
     }
     return;
 }
+
 
 void generate_rays(ray ray_arr[], ray main_ray, int amount) {
     point3d new_start, new_end, new_delta, ang_coeff;

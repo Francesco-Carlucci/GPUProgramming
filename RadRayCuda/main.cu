@@ -3,7 +3,9 @@
 #include <time.h>
 
 #define COMPARE 1
-#define POINT_GEN_PAR
+#define POINT_GEN_PAR_RECT
+//#define POINT_GEN_PAR
+//#define POINT_GEN_SEQ
 
 #include "3dmisc.h"
 #include "radray.h"
@@ -117,7 +119,11 @@ int main() {  //pass file name and parameters through command line
         fprintf(fout_seq, "%f,%f,%f,%f,%f,%f\n", ray_arr[i].start.x, ray_arr[i].start.y, ray_arr[i].start.z, ray_arr[i].end.x, ray_arr[i].end.y, ray_arr[i].end.z);
     }
 
+
+
     // ################################################## SIMULATION PARALLEL ############################################
+
+
 
     printf("PARALLEL:\n");
 
@@ -133,16 +139,12 @@ int main() {  //pass file name and parameters through command line
             cube_energy_parallel = 0;
             printf("Raggio nel cubo %d - ", cube_index);
 
-            // POINTS GENERATION  
+            // POINTS GENERATION ---------------
 
-#ifdef POINT_GEN_PAR 
+            clock_t begin_point_gen= clock();
 
-            //point_amt=somma su tutti i rettangoli, alloca preciso
-            int x_amt = (cubes[cube_index].max.x - cubes[cube_index].min.x) / res.x;
-            int y_amt = (cubes[cube_index].max.y - cubes[cube_index].min.y) / res.y;
-            int z_amt = (cubes[cube_index].max.z - cubes[cube_index].min.z) / res.z;
-            //cubes[cube_index].point_amt=x_amt * y_amt * z_amt;
-            cubes[cube_index].points = (energy_point *) malloc(x_amt * y_amt * z_amt * sizeof(energy_point));
+#ifdef POINT_GEN_PAR_RECT 
+            int x_amt, y_amt, z_amt;
             int offset=0;
             cubes[cube_index].rects[0].offset = 0;
             // for each triangle we compute the number of points and obtain the offset that its points will have in vector points
@@ -154,28 +156,34 @@ int main() {  //pass file name and parameters through command line
                 z_amt = (cubes[cube_index].max.z - cubes[cube_index].min.z) / res.z;
                 cubes[cube_index].rects[rect_index].offset = cubes[cube_index].rects[rect_index-1].offset + x_amt*y_amt*z_amt;
             }
-            // we compute the total number of points used to allocate dev_points
+            // we compute the total number of points used to allocate dev_points and points
             point2d p1 = cubes[cube_index].rects[cubes[cube_index].rectN-1].p1;
             point2d p2 = cubes[cube_index].rects[cubes[cube_index].rectN-1].p2;
             x_amt = (p2.x - p1.x) / res.x;
             y_amt = (p2.y - p1.y) / res.y;
             z_amt = (cubes[cube_index].max.z - cubes[cube_index].min.z) / res.z;
             cubes[cube_index].point_amt = cubes[cube_index].rects[cubes[cube_index].rectN-1].offset + x_amt*y_amt*z_amt;
+            cubes[cube_index].points = (energy_point *) malloc(cubes[cube_index].point_amt * sizeof(energy_point));
 
             dev_point_ens = generate_points_in_rect_parallel(&(cubes[cube_index]), res);
-
 #endif
 
-#ifndef POINT_GEN_PAR
+#ifdef POINT_GEN_PAR
+            generate_points_by_resolution_parallel(&(cubes[cube_index]), res, &dev_point_ens);
+#endif
+
+#ifdef POINT_GEN_SEQ
             generate_points_by_resolution(&cubes[cube_index], res);
             cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
             cudaMemcpy((void*) dev_point_ens, (void*) cubes[cube_index].points, cubes[cube_index].point_amt *sizeof(energy_point), cudaMemcpyHostToDevice);
 #endif
 
-            int nblocks=cubes[cube_index].point_amt*N_STEPS/1024+1;   //*N_STEPS
-            /***
-             * migliorare gestione blocchi per evitare la warp divergence di point_amt
-             */
+            clock_t end_point_gen = clock();
+            printf("Point gen: %f - ", (double) (end_point_gen - begin_point_gen) / CLOCKS_PER_SEC);
+
+            // ENERGY COMPUTATION @@@@@@@@@@@@@@@@@@
+
+            int nblocks=cubes[cube_index].point_amt*N_STEPS/1024+1;
             compute_energies_fully_parallel<<<nblocks,1024>>>(dev_point_ens, dev_ray_traj, cubes[cube_index].point_amt);
             cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
 
@@ -189,6 +197,7 @@ int main() {  //pass file name and parameters through command line
             }
             printf("Energy %f\n", cube_energy_parallel);
         }
+        cudaFree(dev_point_ens);
     }
         
 #if COMPARE
@@ -197,7 +206,11 @@ int main() {  //pass file name and parameters through command line
 
     //write_on_file(fout_par, cubes, cube_number, ray_traj);
 
+
+
     // ################################################## SIMULATION SEQUENTIAL ############################################
+
+
 
 #if COMPARE
 
@@ -217,6 +230,10 @@ int main() {  //pass file name and parameters through command line
 
             cube_energy_sequential = 0;
             printf("Raggio nel cubo %d - ", cube_index);
+
+            clock_t begin_point_gen= clock();
+
+#ifdef POINT_GEN_PAR_RECT
             //point_amt=somma su tutti i rettangoli, alloca preciso
             int x_amt = (cubes[cube_index].max.x - cubes[cube_index].min.x) / res.x;
             int y_amt = (cubes[cube_index].max.y - cubes[cube_index].min.y) / res.y;
@@ -228,6 +245,18 @@ int main() {  //pass file name and parameters through command line
                 offset=generate_points_in_rect(cubes[cube_index].rects[rect_index].p1, cubes[cube_index].rects[rect_index].p2, res, cubes[cube_index].points, cubes[cube_index].min.z, cubes[cube_index].max.z, offset);
             }
             cubes[cube_index].point_amt=offset;
+#endif
+
+#ifdef POINT_GEN_PAR
+            generate_points_by_resolution(&cubes[cube_index], res);
+#endif
+
+#ifdef POINT_GEN_SEQ
+            generate_points_by_resolution(&cubes[cube_index], res);
+#endif
+
+            clock_t end_point_gen = clock();
+            printf("Point gen: %f - ", (double) (end_point_gen - begin_point_gen) / CLOCKS_PER_SEC);
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                     curr_ray_pos = ray_traj.start;

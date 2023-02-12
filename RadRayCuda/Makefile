@@ -15,3 +15,4 @@ profile: main.exe
 build_profile: main.cu radray.cu 3dmisc.cu main.exe
 	nvcc main.cu radray.cu 3dmisc.cu -o main.exe
 	nvprof ./main.exe
+	nvprof --print-gpu-trace ./main.exe
