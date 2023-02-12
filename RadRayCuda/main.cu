@@ -2,10 +2,17 @@
 #include <stdlib.h>
 #include <time.h>
 
+// define, if set to 1 it enables the comparison btwn parallel and serial version
 #define COMPARE 1
+
+// define used to select the point generation algorithm
 #define POINT_GEN_PAR_RECT
 //#define POINT_GEN_PAR
 //#define POINT_GEN_SEQ
+
+// define used to select the energies computation algorithm
+#define ENEG_FULLY_PAR
+//#define ENEG_PAR
 
 #include "3dmisc.h"
 #include "radray.h"
@@ -17,8 +24,7 @@ __global__ void compute_energies(energy_point_s* dev_point_ens,ray* dev_ray_traj
     point3d curr_ray_pos;
     double point_ray_dist;
     double bell_value;
-    //energy_point_s* point;
-    //point=&(dev_point_ens[tid]);
+
     if(tid<point_amt) {
         curr_ray_pos = dev_ray_traj->start;
         for (int step = 0; step < N_STEPS; step++) {                                //Iterates over ray steps
@@ -26,10 +32,7 @@ __global__ void compute_energies(energy_point_s* dev_point_ens,ray* dev_ray_traj
                                   pow(dev_point_ens[tid].pos.y - curr_ray_pos.y, 2) +
                                   pow(dev_point_ens[tid].pos.z - curr_ray_pos.z, 2));
 
-            bell_value = ((1 / (2.506628274631 * 130.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
-            /*if(tid==0 && step==0){  //to be activated for debugging purposes
-                printf("distance: %f bell: %lf\n",point_ray_dist,bell_value);
-            }*/
+            bell_value = ((1 / (2.506628274631 * 13.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
             dev_point_ens[tid].energy[step + 1] = dev_point_ens[tid].energy[step] +bell_value*
                                                    dev_ray_traj->energy_curve[step];
 
@@ -183,7 +186,17 @@ int main() {  //pass file name and parameters through command line
 
             // ENERGY COMPUTATION @@@@@@@@@@@@@@@@@@
 
+            clock_t begin_eneg = clock();
+
+#ifdef ENEG_PAR
+            int nblocks = cubes[cube_index].point_amt/1024+1; 
+            compute_energies<<<nblocks,1024>>>(dev_point_ens, dev_ray_traj, cubes[cube_index].point_amt);
+            cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
+#endif
+
+#ifdef ENEG_FULLY_PAR
             int nblocks=cubes[cube_index].point_amt*N_STEPS/1024+1;
+
             compute_energies_fully_parallel<<<nblocks,1024>>>(dev_point_ens, dev_ray_traj, cubes[cube_index].point_amt);
             cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
 
@@ -191,10 +204,22 @@ int main() {  //pass file name and parameters through command line
                 for (int step=1; step <= N_STEPS; step++) {
                     cubes[cube_index].points[point_index].energy[step]+=cubes[cube_index].points[point_index].energy[step-1];
                 }
-                if(!(cubes[cube_index].points[point_index].pos.x==0 && cubes[cube_index].points[point_index].pos.y==0 &&cubes[cube_index].points[point_index].pos.z==0)) {
+                if(!(cubes[cube_index].points[point_index].pos.x==0 && cubes[cube_index].points[point_index].pos.y==0 && cubes[cube_index].points[point_index].pos.z==0)) {
                     cube_energy_parallel += cubes[cube_index].points[point_index].energy[N_STEPS];
                 }
             }
+#endif
+
+            for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
+                if(!(cubes[cube_index].points[point_index].pos.x==0 && cubes[cube_index].points[point_index].pos.y==0 && cubes[cube_index].points[point_index].pos.z==0)) {
+                    cube_energy_parallel += cubes[cube_index].points[point_index].energy[N_STEPS];
+                }
+            }  
+
+            clock_t end_eneg = clock();
+            printf("Eneg computation: %f - ", (double) (end_eneg - begin_eneg) / CLOCKS_PER_SEC);
+
+
             printf("Energy %f\n", cube_energy_parallel);
         }
         cudaFree(dev_point_ens);
@@ -258,6 +283,8 @@ int main() {  //pass file name and parameters through command line
             clock_t end_point_gen = clock();
             printf("Point gen: %f - ", (double) (end_point_gen - begin_point_gen) / CLOCKS_PER_SEC);
 
+
+            clock_t begin_eneg = clock();
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
                     curr_ray_pos = ray_traj.start;
                     for(int step = 0; step < N_STEPS; step++){                                //Iterates over ray steps
@@ -275,6 +302,9 @@ int main() {  //pass file name and parameters through command line
                 //printf("%f,%f,%f", cubes[cube_index].points[point_index].pos.x, cubes[cube_index].points[point_index].pos.y, cubes[cube_index].points[point_index].pos.z);
                 cube_energy_sequential += cubes[cube_index].points[point_index].energy[N_STEPS];
             }
+            clock_t end_eneg = clock();
+            printf("Eneg computation: %f - ", (double) (end_eneg - begin_eneg) / CLOCKS_PER_SEC);
+
             printf("Energy %f\n", cube_energy_sequential);
         }
     }
