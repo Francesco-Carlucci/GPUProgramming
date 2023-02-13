@@ -3,7 +3,7 @@
 #include <time.h>
 
 // define, if set to 1 it enables the comparison btwn parallel and serial version
-#define COMPARE 1
+#define COMPARE 0
 
 // define used to select the point generation algorithm
 #define POINT_GEN_PAR_RECT
@@ -109,7 +109,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {10,10,10};
+    point3d res = {20,20,20};
     //float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy_sequential, cube_energy_parallel;
