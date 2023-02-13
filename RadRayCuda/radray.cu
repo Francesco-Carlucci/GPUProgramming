@@ -360,7 +360,10 @@ energy_point* generate_points_in_rect_parallel(cube *curr_cube, point3d resoluti
     rectangle *dev_rects;
     int nblocks = (curr_cube->point_amt)/MAX_THREADS+1;
 
-    cudaMalloc( (void**) &dev_points, curr_cube->point_amt * sizeof(energy_point));
+    cudaError_t check=cudaMalloc( (void**) &dev_points, curr_cube->point_amt * sizeof(energy_point));
+    if(check!=cudaSuccess){
+        printf("\nCuda memory error: %s, tried to allocate %d bytes\n",cudaGetErrorString(check),curr_cube->point_amt*sizeof(energy_point));
+    }
     cudaMalloc( (void**) &dev_rects, curr_cube->rectN * sizeof(rectangle));
     cudaMemcpy(dev_rects, curr_cube->rects, curr_cube->rectN * sizeof(rectangle), cudaMemcpyHostToDevice);
     initialize_points_rectangles<<<nblocks,MAX_THREADS>>>(dev_points, dev_rects, curr_cube->rectN, curr_cube->min.z, curr_cube->max.z, curr_cube->point_amt, resolution);
