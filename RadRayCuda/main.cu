@@ -17,6 +17,65 @@
 #include "3dmisc.h"
 #include "radray.h"
 
+/***
+* Kernels for energy computation
+*/
+
+__constant__ ray dev_ray_traj;
+
+__global__ void compute_energies(energy_point_s* dev_point_ens,int point_amt){  //,ray* dev_ray_traj
+
+    int tid=blockDim.x*blockIdx.x+threadIdx.x;
+    point3d curr_ray_pos;
+    double point_ray_dist;
+    double bell_value;
+
+    if(tid<point_amt) {
+        curr_ray_pos = dev_ray_traj.start;
+        for (int step = 0; step < N_STEPS; step++) {                                //Iterates over ray steps
+            point_ray_dist = sqrt(pow(dev_point_ens[tid].pos.x - curr_ray_pos.x, 2) +
+                                  pow(dev_point_ens[tid].pos.y - curr_ray_pos.y, 2) +
+                                  pow(dev_point_ens[tid].pos.z - curr_ray_pos.z, 2));
+
+            bell_value = ((1 / (2.506628274631 * 13.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
+            dev_point_ens[tid].energy[step + 1] = dev_point_ens[tid].energy[step] +bell_value*
+                                                                                   dev_ray_traj.energy_curve[step];
+
+            curr_ray_pos.x += dev_ray_traj.delta.x;
+            curr_ray_pos.y += dev_ray_traj.delta.y;
+            curr_ray_pos.z += dev_ray_traj.delta.z;
+        }
+    }
+}
+
+__global__ void compute_energies_fully_parallel(energy_point_s* dev_point_ens,int point_amt){  //,ray* dev_ray_traj
+
+    int tid=blockDim.x*blockIdx.x+threadIdx.x;
+    int point_index=tid/N_STEPS;
+    int en_index=tid%N_STEPS;
+    //printf("\nthread n: %d %d %d\n",tid,point_index,en_index);
+
+    point3d curr_ray_pos;
+    double point_ray_dist;
+    double bell_value;
+
+
+    if(point_index<=point_amt) {
+        curr_ray_pos = dev_ray_traj.start;
+        curr_ray_pos.x += (dev_ray_traj.delta.x*(float) (en_index));
+        curr_ray_pos.y += (dev_ray_traj.delta.y*(float) (en_index));
+        curr_ray_pos.z += (dev_ray_traj.delta.z*(float) (en_index));
+
+        point_ray_dist = sqrt(pow(dev_point_ens[point_index].pos.x - curr_ray_pos.x, 2) +
+                              pow(dev_point_ens[point_index].pos.y - curr_ray_pos.y, 2) +
+                              pow(dev_point_ens[point_index].pos.z - curr_ray_pos.z, 2));
+
+        bell_value = ((1 / (2.506628274631 * 13.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
+
+        dev_point_ens[point_index].energy[en_index+1] =bell_value*dev_ray_traj.energy_curve[en_index];
+    }
+}
+
 int main() {  //pass file name and parameters through command line
 
     char* inpath = "./out_all_points.txt";
@@ -50,7 +109,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {20,20,20};
+    point3d res = {10,10,10};
     //float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy_sequential, cube_energy_parallel;
@@ -249,7 +308,7 @@ int main() {  //pass file name and parameters through command line
     clock_t end_seq = clock();
 
     // writing on file sequential informations
-    //write_on_file(fout_seq, cubes, cube_number, ray_traj);
+    write_on_file(fout_seq, cubes, cube_number, ray_traj);
 
     double sequential_time = (double) (end_seq - begin_seq) / CLOCKS_PER_SEC;
     double parallel_time =(double) (end_par - begin_par) / CLOCKS_PER_SEC;
