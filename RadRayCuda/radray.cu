@@ -476,3 +476,63 @@ void write_on_file(FILE *fout, cube *cubes, int cube_number, ray ray_traj) {
     }
     
 }
+
+
+/***
+* Kernels for energy computation
+*/
+
+__constant__ ray dev_ray_traj;   //defined in .h file
+
+__global__ void compute_energies(energy_point_s* dev_point_ens,int point_amt){  //,ray* dev_ray_traj
+
+    int tid=blockDim.x*blockIdx.x+threadIdx.x;
+    point3d curr_ray_pos;
+    double point_ray_dist;
+    double bell_value;
+
+    if(tid<point_amt) {
+        curr_ray_pos = dev_ray_traj.start;
+        for (int step = 0; step < N_STEPS; step++) {                                //Iterates over ray steps
+            point_ray_dist = sqrt(pow(dev_point_ens[tid].pos.x - curr_ray_pos.x, 2) +
+                                  pow(dev_point_ens[tid].pos.y - curr_ray_pos.y, 2) +
+                                  pow(dev_point_ens[tid].pos.z - curr_ray_pos.z, 2));
+
+            bell_value = ((1 / (2.506628274631 * 13.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
+            dev_point_ens[tid].energy[step + 1] = dev_point_ens[tid].energy[step] +bell_value*
+                                                                                   dev_ray_traj.energy_curve[step];
+
+            curr_ray_pos.x += dev_ray_traj.delta.x;
+            curr_ray_pos.y += dev_ray_traj.delta.y;
+            curr_ray_pos.z += dev_ray_traj.delta.z;
+        }
+    }
+}
+
+__global__ void compute_energies_fully_parallel(energy_point_s* dev_point_ens,int point_amt){  //,ray* dev_ray_traj
+
+    int tid=blockDim.x*blockIdx.x+threadIdx.x;
+    int point_index=tid/N_STEPS;
+    int en_index=tid%N_STEPS;
+    //printf("\nthread n: %d %d %d\n",tid,point_index,en_index);
+
+    point3d curr_ray_pos;
+    double point_ray_dist;
+    double bell_value;
+
+
+    if(point_index<=point_amt) {
+        curr_ray_pos = dev_ray_traj.start;
+        curr_ray_pos.x += (dev_ray_traj.delta.x*(float) (en_index));
+        curr_ray_pos.y += (dev_ray_traj.delta.y*(float) (en_index));
+        curr_ray_pos.z += (dev_ray_traj.delta.z*(float) (en_index));
+
+        point_ray_dist = sqrt(pow(dev_point_ens[point_index].pos.x - curr_ray_pos.x, 2) +
+                              pow(dev_point_ens[point_index].pos.y - curr_ray_pos.y, 2) +
+                              pow(dev_point_ens[point_index].pos.z - curr_ray_pos.z, 2));
+
+        bell_value = ((1 / (2.506628274631 * 13.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
+
+        dev_point_ens[point_index].energy[en_index+1] =bell_value*dev_ray_traj.energy_curve[en_index];
+    }
+}

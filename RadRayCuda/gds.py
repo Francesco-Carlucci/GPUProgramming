@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import sys
 
 MAX_CUBE = 300
 
@@ -38,74 +39,116 @@ vertex_cube_list = []
 
 cu_layer = 0
 
+def divide_in_rects(points):
+    p = sorted([_ for _ in points], key=lambda x: (x[0], x[1]))
+    rects = []
+    d = dict()
+    i = 0
+    p1 = p[i]
+    d[p1[1]] = 1
+    for p2 in p[1:]:
+        if p2[0] != p1[0]:
+            j = 0
+            borderpoint = []
+            for y in sorted(list(d.keys())):
+                if d[y] % 2 == 1:
+                    if j == 0:
+                        borderpoint.append(p1[0])
+                        borderpoint.append(y)
+                    else:
+                        borderpoint.append(p2[0])
+                        borderpoint.append(y)
+                        rects+=borderpoint
+                        borderpoint = []
+                    j = not j
+        if p2[1] not in d:
+            d[p2[1]] = 1
+        else:
+            d[p2[1]] += 1
+        p1 = p2
+    return rects
+
 def read_gds(path):
     cnt = 0
     en_xy = 0
     index_cube = 0
     index_vertex = 0
-    f = open(path,"r")
+    f = open(path, "r")
+    fout = open("out_all_points.txt", "w")
     for line in f:
         line = line.strip()
         if line == 'BOUNDARY':
             in_b = 1
             cnt = cnt + 1
             while (in_b == 1):
-                #print ('In boundary - ', cnt)
-                data = f.readline() #Readling LAYER ID
+                # print ('In boundary - ', cnt)
+                data = f.readline()  # Readling LAYER ID
                 check = data.split(' ')
                 data = data.strip()
-                #print(data)
-                #print(check)
-                #Layer Storage
+                # print(data)
+                # print(check)
+                # Layer Storage
                 if check[0] == 'LAYER':
                     cu_layer = int(check[1])
-                    #add_lay = 1
-                    #for item in layer_list:
+
+                    # add_lay = 1
+                    # for item in layer_list:
                     #	if item == cu_layer:
                     #		add_lay = 0
-                    #if add_lay == 1:
+                    # if add_lay == 1:
                     layer_list.append(cu_layer)
 
                 if data == 'ENDEL':
-                    #A cube is closed
+                    # A cube is closed
                     vertex_cube_list.append(index_vertex)
-                    #print(layers_cube)
+                    #print(len(layers_cube[cu_layer][index_cube]))
+                    fout.write(str(index_vertex - 1) + ' ' + str(cu_layer) + '\n')
+                    fout.write(str(layers_cube[cu_layer][index_cube][0][2]) + ' ' + str(
+                        layers_cube[cu_layer][index_cube][0][5]) + "\n")
+                    for vertex in layers_cube[cu_layer][index_cube][0:index_vertex - 1]:
+                        fout.write(' '.join([str(_) for _ in [*vertex[0:2]]]) + "\n")
+                    rects = divide_in_rects(
+                        [(_[0], _[1]) for _ in layers_cube[cu_layer][index_cube][0:index_vertex - 1]])
+                    fout.write(str(len(rects) // 2) + '\n')
+                    fout.write(' '.join([str(_) for _ in rects]) + '\n')
+                    # print(layers_cube)
                     index_cube = index_cube + 1
                     index_vertex = 0
-                    #print(index_vertex)
+                    # print(index_vertex)
                     en_xy = 0
                     in_b = 0
-                    #d = input()
-                    #break
+                    # d = input()
+                    # break
 
                 if en_xy == 1:
-                    #Inserting coordinates once already recognized XY
-                    #print('-- Loading layer ', cu_layer)
-                        
-                    layers_cube[cu_layer][index_cube][index_vertex][0] = check[0].replace(":","")
-                    layers_cube[cu_layer][index_cube][index_vertex][1] = check[1].replace("\n","")
-                    layers_cube[cu_layer][index_cube][index_vertex][2] = layers_tech[cu_layer][0]
-                    layers_cube[cu_layer][index_cube][index_vertex][3] = check[0].replace(":","")
-                    layers_cube[cu_layer][index_cube][index_vertex][4] = check[1].replace("\n","")
-                    layers_cube[cu_layer][index_cube][index_vertex][5] = layers_tech[cu_layer][0] + layers_tech[cu_layer][1]
-                    index_vertex = index_vertex + 1
+                    # Inserting coordinates once already recognized XY
+                    # print('-- Loading layer ', cu_layer)
 
+                    layers_cube[cu_layer][index_cube][index_vertex][0] = check[0].replace(":", "")
+                    layers_cube[cu_layer][index_cube][index_vertex][1] = check[1].replace("\n", "")
+                    layers_cube[cu_layer][index_cube][index_vertex][2] = layers_tech[cu_layer][0]
+                    layers_cube[cu_layer][index_cube][index_vertex][3] = check[0].replace(":", "")
+                    layers_cube[cu_layer][index_cube][index_vertex][4] = check[1].replace("\n", "")
+                    layers_cube[cu_layer][index_cube][index_vertex][5] = layers_tech[cu_layer][0] + \
+                                                                         layers_tech[cu_layer][1]
+                    index_vertex = index_vertex + 1
 
                 if check[0] == 'XY':
-                    layers_cube[cu_layer][index_cube][index_vertex][0] = check[1].replace(":","")
-                    layers_cube[cu_layer][index_cube][index_vertex][1] = check[2].replace("\n","")
+                    layers_cube[cu_layer][index_cube][index_vertex][0] = check[1].replace(":", "")
+                    layers_cube[cu_layer][index_cube][index_vertex][1] = check[2].replace("\n", "")
                     layers_cube[cu_layer][index_cube][index_vertex][2] = layers_tech[cu_layer][0]
-                    layers_cube[cu_layer][index_cube][index_vertex][3] = check[1].replace(":","")
-                    layers_cube[cu_layer][index_cube][index_vertex][4] = check[2].replace("\n","")
-                    layers_cube[cu_layer][index_cube][index_vertex][5] = layers_tech[cu_layer][0] + layers_tech[cu_layer][1]
+                    layers_cube[cu_layer][index_cube][index_vertex][3] = check[1].replace(":", "")
+                    layers_cube[cu_layer][index_cube][index_vertex][4] = check[2].replace("\n", "")
+                    layers_cube[cu_layer][index_cube][index_vertex][5] = layers_tech[cu_layer][0] + \
+                                                                         layers_tech[cu_layer][1]
                     index_vertex = index_vertex + 1
                     en_xy = 1
-
-    total_cube = index_cube		
+    fout.close()
+    total_cube = index_cube
 
     print('-- Total Number of Cubes : ', total_cube)
     print('-- Done')
-    
+
     return layers_cube, layer_list, vertex_cube_list
 
 def generate_cubes(vertex_cube_list, print_list, ax_1):
@@ -161,3 +204,18 @@ def generate_cubes(vertex_cube_list, print_list, ax_1):
         index_cube = index_cube + 1
     fig2.tight_layout()
     fig2.show()
+
+
+def main():
+    if(len(sys.argv)!=2):
+        print("Missing GDS-II file path use: <this script> <GDS-II file name>")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    layers_cube, layer_list, vertex_cube_list = read_gds(sys.argv[1])
+    #generate_cubes(vertex_cube_list, ax, 'output.txt')
+
+
+if __name__=="__main__":
+    main()

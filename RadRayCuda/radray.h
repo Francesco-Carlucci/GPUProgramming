@@ -46,6 +46,7 @@ typedef struct ray_s{
     energy_type profile;
     float energy_curve[ENERGY_CURVE_SIZE];
 }ray;
+extern __constant__ ray dev_ray_traj;
 
 int cube_contains_point(cube cu, point3d p);
 int point_in_polygon(cube poly,point3d p);
@@ -63,5 +64,7 @@ int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE
 void write_on_file(FILE *fout, cube *cubes, int cube_number, ray ray_traj);
 energy_point* generate_points_in_rect_parallel(cube *curr_cube, point3d resolution);
 int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_point* points,int minz,int maxz,int offset);
+__global__ void compute_energies(energy_point_s* dev_point_ens,int point_amt);
+__global__ void compute_energies_fully_parallel(energy_point_s* dev_point_ens,int point_amt);
 
 #endif

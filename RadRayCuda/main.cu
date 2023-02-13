@@ -11,74 +11,15 @@
 //#define POINT_GEN_SEQ
 
 // define used to select the energies computation algorithm
-#define ENEG_FULLY_PAR
-//#define ENEG_PAR
+//#define ENEG_FULLY_PAR
+#define ENEG_PAR
 
 #include "3dmisc.h"
 #include "radray.h"
 
-__constant__ ray dev_ray_traj;
-
-__global__ void compute_energies(energy_point_s* dev_point_ens,int point_amt){  //,ray* dev_ray_traj
-
-    int tid=blockDim.x*blockIdx.x+threadIdx.x;
-    point3d curr_ray_pos;
-    double point_ray_dist;
-    double bell_value;
-
-    if(tid<point_amt) {
-        curr_ray_pos = dev_ray_traj.start;
-        for (int step = 0; step < N_STEPS; step++) {                                //Iterates over ray steps
-            point_ray_dist = sqrt(pow(dev_point_ens[tid].pos.x - curr_ray_pos.x, 2) +
-                                  pow(dev_point_ens[tid].pos.y - curr_ray_pos.y, 2) +
-                                  pow(dev_point_ens[tid].pos.z - curr_ray_pos.z, 2));
-
-            bell_value = ((1 / (2.506628274631 * 13.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
-            dev_point_ens[tid].energy[step + 1] = dev_point_ens[tid].energy[step] +bell_value*
-                                                   dev_ray_traj.energy_curve[step];
-
-            curr_ray_pos.x += dev_ray_traj.delta.x;
-            curr_ray_pos.y += dev_ray_traj.delta.y;
-            curr_ray_pos.z += dev_ray_traj.delta.z;
-        }
-    }
-}
-
-
-
-__global__ void compute_energies_fully_parallel(energy_point_s* dev_point_ens,int point_amt){  //,ray* dev_ray_traj
-
-    int tid=blockDim.x*blockIdx.x+threadIdx.x;
-    int point_index=tid/N_STEPS;
-    int en_index=tid%N_STEPS;
-    //printf("\nthread n: %d %d %d\n",tid,point_index,en_index);
-
-    point3d curr_ray_pos;
-    double point_ray_dist;
-    double bell_value;
-
-
-    if(point_index<=point_amt) {
-        curr_ray_pos = dev_ray_traj.start;
-        curr_ray_pos.x += (dev_ray_traj.delta.x*(float) (en_index));
-        curr_ray_pos.y += (dev_ray_traj.delta.y*(float) (en_index));
-        curr_ray_pos.z += (dev_ray_traj.delta.z*(float) (en_index));
-
-        point_ray_dist = sqrt(pow(dev_point_ens[point_index].pos.x - curr_ray_pos.x, 2) +
-                                 pow(dev_point_ens[point_index].pos.y - curr_ray_pos.y, 2) +
-                                 pow(dev_point_ens[point_index].pos.z - curr_ray_pos.z, 2));
-
-        bell_value = ((1 / (2.506628274631 * 13.0)) * (double)exp(-0.5 * (double)pow((1 / 13.0 * (point_ray_dist/10 - 0)), 2)));
-
-        dev_point_ens[point_index].energy[en_index+1] =bell_value*dev_ray_traj.energy_curve[en_index];
-    }
-}
-
-
-
 int main() {  //pass file name and parameters through command line
 
-    char* inpath = "../RadrayPy/out_all_points.txt";
+    char* inpath = "./out_all_points.txt";
     int cube_number; //i é l'indice del cubo
     point3d CUBE_GLOBAL_MAX = {0, 0, 0}, CUBE_GLOBAL_MIN = {1, 1, 1};
     cube cubes[MAX_CUBE];
@@ -109,7 +50,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {10,10,10};
+    point3d res = {20,20,20};
     //float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy_sequential, cube_energy_parallel;
@@ -151,7 +92,6 @@ int main() {  //pass file name and parameters through command line
 
 #ifdef POINT_GEN_PAR_RECT 
             int x_amt, y_amt, z_amt;
-            int offset=0;
             cubes[cube_index].rects[0].offset = 0;
             // for each triangle we compute the number of points and obtain the offset that its points will have in vector points
             for(int rect_index=1; rect_index<cubes[cube_index].rectN; rect_index++){
@@ -193,27 +133,28 @@ int main() {  //pass file name and parameters through command line
 
 #ifdef ENEG_PAR
             int nblocks = cubes[cube_index].point_amt/1024+1; 
-            compute_energies<<<nblocks,1024>>>(dev_point_ens, dev_ray_traj, cubes[cube_index].point_amt);
+            compute_energies<<<nblocks,1024>>>(dev_point_ens, cubes[cube_index].point_amt);
             cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
+            for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
+                cube_energy_parallel += cubes[cube_index].points[point_index].energy[N_STEPS];
+            }
 #endif
 
 #ifdef ENEG_FULLY_PAR
-            int nblocks=cubes[cube_index].point_amt*N_STEPS/1024+1;
+            int nblocks=cubes[cube_index].point_amt/1024+1;
 
-            //compute_energies_fully_parallel<<<nblocks,1024>>>(dev_point_ens, dev_ray_traj,cubes[cube_index].point_amt);  // dev_ray_traj,
-            compute_energies<<<nblocks,1024>>>(dev_point_ens,cubes[cube_index].point_amt);        //dev_ray_traj,
+            compute_energies_fully_parallel<<<nblocks,1024>>>(dev_point_ens,cubes[cube_index].point_amt);  // dev_ray_traj,
             cudaMemcpy((void*) cubes[cube_index].points,(void*) dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point),cudaMemcpyDeviceToHost);
 
             for(int point_index = 0; point_index < cubes[cube_index].point_amt; point_index++){
-                /*for (int step=1; step <= N_STEPS; step++) {
+                for (int step=1; step <= N_STEPS; step++) {
                     cubes[cube_index].points[point_index].energy[step]+=cubes[cube_index].points[point_index].energy[step-1];
-                }*/
+                }
                 cube_energy_parallel += cubes[cube_index].points[point_index].energy[N_STEPS];
             }
 #endif
             clock_t end_eneg = clock();
             printf("Eneg computation: %f - ", (double) (end_eneg - begin_eneg) / CLOCKS_PER_SEC);
-
 
             printf("Energy %f\n", cube_energy_parallel);
         }
@@ -315,7 +256,7 @@ int main() {  //pass file name and parameters through command line
 
     printf("\nParallelized computation: %f\n",parallel_time);
     printf("Sequential computation: %f\n",sequential_time);
-    printf("Speedup= %.2f %% \n",(sequential_time/parallel_time)*100);
+    printf("Speedup = %.2f %% \n",(sequential_time/parallel_time)*100);
 
 #endif
 
