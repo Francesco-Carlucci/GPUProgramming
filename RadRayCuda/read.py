@@ -12,7 +12,7 @@ ev = []
 affected_cubes = []
 rays = []
 
-with open("./out_seq.txt", "r") as fin:
+with open("./out_par.txt", "r") as fin:
     # reading the rays
     nrays = int(fin.readline().strip())
     for i in range(nrays):
@@ -72,7 +72,7 @@ for i in range(STEPS):
 
 # scatter, I do this so that colors are normalized wrt to the maximum, if you start with 0 the
 # heatmap is too brigth at the end since the scale is normalized of the very small initial values
-scat = ax.scatter(xva, yva, zva, c=energy_per_step[STEPS-1])
+scat = ax.scatter(xva, yva, zva, c=energy_per_step[STEPS-1], alpha=0.08, cmap='jet')
 scat.set_array(energy_per_step[0])
 
 #function caled by slider
@@ -80,8 +80,8 @@ def update_time_step(val):
     scat.set_array(energy_per_step[val-1])
 
 # creating the SLIDER
-ax_slider = plt.axes([0.2, 0.1, 0.65, 0.03]) 
+ax_slider = fig.add_axes([0.2, 0.1, 0.65, 0.03])
 slider = Slider(ax_slider, label="Time step", valmin=1, valmax=STEPS, valstep=1, valinit=1, orientation="horizontal")
 slider.on_changed(update_time_step)
-
+#fig.tight_layout()
 plt.show()

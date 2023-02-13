@@ -104,7 +104,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {10, 10, 10};
+    point3d res = {20, 20, 20};
     float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy_sequential, cube_energy_parallel;
@@ -229,7 +229,7 @@ int main() {  //pass file name and parameters through command line
     clock_t end_par = clock();
 #endif
 
-    //write_on_file(fout_par, cubes, cube_number, ray_traj);
+    write_on_file(fout_par, cubes, cube_number, ray_traj);
 
 
 

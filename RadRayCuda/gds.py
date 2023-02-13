@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 MAX_CUBE = 300
 
@@ -109,8 +111,13 @@ def read_gds(path):
 def generate_cubes(vertex_cube_list, print_list, ax_1):
     index_cube = 0
     print(print_list)
+    fig2 = plt.figure()
+    ax_cubes = fig2.add_subplot(111, projection='3d')
+    ax_cubes.set_title("GDS-II components")
     for item in layer_list:
         if (index_cube in print_list):
+            cmap = matplotlib.cm.get_cmap('viridis')  # Get colormap by name
+            c = cmap(matplotlib.colors.Normalize(0, 10)(index_cube))
             cube_layer_id[index_cube] = item
             n = 0
             xline_1 = []
@@ -126,12 +133,31 @@ def generate_cubes(vertex_cube_list, print_list, ax_1):
                 xline_2.append(layers_cube[item][index_cube][n][3])
                 yline_2.append(layers_cube[item][index_cube][n][4])
                 zline_2.append(layers_cube[item][index_cube][n][5])
-                
+
+                if n > 0:
+                    pcv = Poly3DCollection([list(zip(xline_1[n - 1:n + 1], yline_1[n - 1:n + 1], zline_1[n - 1:n + 1]))
+                                            + list(zip(xline_1[-1:-3:-1], yline_1[-1:-3:-1], zline_2[-1:-3:-1]))])
+                    pcv.set_facecolor(c)
+                    ax_cubes.add_collection3d(pcv)
+
+                ax_cubes.plot3D([xline_1[n], xline_2[n]], [yline_1[n], yline_2[n]], [zline_1[n], zline_2[n]], 'gray')
                 ax_1.plot3D([xline_1[n],xline_2[n]], [yline_1[n],yline_2[n]], [zline_1[n],zline_2[n]], 'gray')  #'gray'
                 n = n + 1
-            
+
+            pc1 = Poly3DCollection([list(zip(xline_1, yline_1, zline_1))])
+            pc2 = Poly3DCollection([list(zip(xline_2, yline_2, zline_2))])
+
+            pc1.set_facecolor(c)
+            pc2.set_facecolor(c)
+            ax_cubes.add_collection3d(pc1)
+            ax_cubes.add_collection3d(pc2)
+            ax_cubes.plot3D(xline_1, yline_1, zline_1, 'red')
+            ax_cubes.plot3D(xline_2, yline_2, zline_2, 'red')
+
             ax_1.plot3D(xline_1, yline_1, zline_1, 'blue')
             ax_1.plot3D(xline_2, yline_2, zline_2, 'blue')
             #plt.show()
             n = 0
         index_cube = index_cube + 1
+    fig2.tight_layout()
+    fig2.show()
