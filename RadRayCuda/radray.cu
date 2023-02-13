@@ -97,7 +97,6 @@ __global__ void initialize_points_rectangles(energy_point *points, rectangle *re
         int tid_off = tid-offset;
 
         // we run the algorithm to initialize the point in the rectangles
-        int x_amt = (rect[r].p2.x - rect[r].p1.x) / resolution.x;
         int y_amt = (rect[r].p2.y - rect[r].p1.y) / resolution.y;
         int z_amt = (maxz - minz) / resolution.z;
         int x=tid_off/(y_amt*z_amt);
@@ -362,7 +361,7 @@ energy_point* generate_points_in_rect_parallel(cube *curr_cube, point3d resoluti
 
     cudaError_t check=cudaMalloc( (void**) &dev_points, curr_cube->point_amt * sizeof(energy_point));
     if(check!=cudaSuccess){
-        printf("\nCuda memory error: %s, tried to allocate %d bytes\n",cudaGetErrorString(check),curr_cube->point_amt*sizeof(energy_point));
+        printf("\nCuda memory error: %s, tried to allocate %lu bytes\n",cudaGetErrorString(check),curr_cube->point_amt*sizeof(energy_point));
     }
     cudaMalloc( (void**) &dev_rects, curr_cube->rectN * sizeof(rectangle));
     cudaMemcpy(dev_rects, curr_cube->rects, curr_cube->rectN * sizeof(rectangle), cudaMemcpyHostToDevice);
@@ -424,7 +423,6 @@ void generate_rays(ray ray_arr[], ray main_ray, int amount) {
     point3d new_start, new_end, new_delta, ang_coeff;
     int new_steps;
     float main_ray_factor;
-    float new_length;
     float norm;
     
     ray_arr[0] = main_ray;

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from gds import read_gds, generate_cubes
 from matplotlib.widgets import Slider
+import sys
 
 STEPS = 100
 
@@ -11,6 +12,9 @@ zv = []
 ev = []
 affected_cubes = []
 rays = []
+
+if(len(sys.argv)!=2):
+    print("Missing GDS-II file path use: <this script> <GDS-II file name>")
 
 with open("./out_par.txt", "r") as fin:
     # reading the rays
@@ -48,7 +52,7 @@ line_z = np.linspace(z1, z2, 1000)
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 
-layers_cube, layer_list, vertex_cube_list = read_gds("../RadrayPy/MUX2_X1_def_45nm.txt")
+layers_cube, layer_list, vertex_cube_list = read_gds(sys.argv[1])
 generate_cubes(vertex_cube_list, affected_cubes, ax)
 
 # printing the RAYS
