@@ -2,37 +2,37 @@ OUTPUT OF TERMINAL
 
 Parallel with for in kernel:
 PARALLEL:
-Raggio nel cubo 0 - Point gen: 0.000264 - Eneg computation: 0.402079 - Energy 9324.481445
-Raggio nel cubo 3 - Point gen: 0.003405 - Eneg computation: 0.267743 - Energy 8558.891602
-Raggio nel cubo 5 - Point gen: 0.002522 - Eneg computation: 0.528999 - Energy 24623.625000
-Raggio nel cubo 9 - Point gen: 0.003208 - Eneg computation: 0.028847 - Energy 1875.423950
+Raggio nel cubo 0 - Point gen: 0.001152 - Eneg computation: 2.958346 - Energy 74609.437500
+Raggio nel cubo 3 - Point gen: 0.006438 - Eneg computation: 2.139497 - Energy 68543.460938
+Raggio nel cubo 5 - Point gen: 0.004435 - Eneg computation: 4.377833 - Energy 204027.156250
+Raggio nel cubo 9 - Point gen: 0.006264 - Eneg computation: 0.228236 - Energy 15126.049805
 
 SEQUENTIAL:
-Raggio nel cubo 0 - Point gen: 0.046698 - Eneg computation: 2.261376 - Energy 9324.479492
-Raggio nel cubo 3 - Point gen: 0.032743 - Eneg computation: 1.645785 - Energy 8558.890625
-Raggio nel cubo 5 - Point gen: 0.064384 - Eneg computation: 3.300745 - Energy 24623.623047
-Raggio nel cubo 9 - Point gen: 0.003316 - Eneg computation: 0.171652 - Energy 1875.423828
+Raggio nel cubo 0 - Point gen: 0.398638 - Eneg computation: 18.162225 - Energy 74609.429688
+Raggio nel cubo 3 - Point gen: 0.310684 - Eneg computation: 13.196936 - Energy 68543.460938
+Raggio nel cubo 5 - Point gen: 0.568727 - Eneg computation: 27.390836 - Energy 204027.140625
+Raggio nel cubo 9 - Point gen: 0.036223 - Eneg computation: 1.490895 - Energy 15126.048828
 
-Parallelized computation: 1.238446
-Sequential computation: 7.526799
-Speedup= 83.55 % 
+Parallelized computation: 9.730197
+Sequential computation: 61.555285
+Speedup = 632.62 % 
 
 Fully parallel:
 PARALLEL:
-Raggio nel cubo 0 - Point gen: 0.000247 - Eneg computation: 0.457639 - Energy 18645.673828
-Raggio nel cubo 3 - Point gen: 0.003371 - Eneg computation: 0.304681 - Energy 17115.292969
-Raggio nel cubo 5 - Point gen: 0.002506 - Eneg computation: 0.613988 - Energy 49239.949219
-Raggio nel cubo 9 - Point gen: 0.003193 - Eneg computation: 0.032945 - Energy 3750.854492
+Raggio nel cubo 0 - Point gen: 0.001907 - Eneg computation: 3.380465 - Energy 74609.492188
+Raggio nel cubo 3 - Point gen: 0.006783 - Eneg computation: 2.453330 - Energy 68543.492188
+Raggio nel cubo 5 - Point gen: 0.004269 - Eneg computation: 5.009247 - Energy 204027.218750
+Raggio nel cubo 9 - Point gen: 0.006874 - Eneg computation: 0.269499 - Energy 15126.067383
 
 SEQUENTIAL:
-Raggio nel cubo 0 - Point gen: 0.047219 - Eneg computation: 2.267052 - Energy 9324.479492
-Raggio nel cubo 3 - Point gen: 0.033418 - Eneg computation: 1.638504 - Energy 8558.890625
-Raggio nel cubo 5 - Point gen: 0.064628 - Eneg computation: 3.301804 - Energy 24623.623047
-Raggio nel cubo 9 - Point gen: 0.003269 - Eneg computation: 0.172596 - Energy 1875.423828
+Raggio nel cubo 0 - Point gen: 0.419288 - Eneg computation: 18.193037 - Energy 74609.429688
+Raggio nel cubo 3 - Point gen: 0.295862 - Eneg computation: 13.190028 - Energy 68543.460938
+Raggio nel cubo 5 - Point gen: 0.566451 - Eneg computation: 26.994702 - Energy 204027.140625
+Raggio nel cubo 9 - Point gen: 0.037062 - Eneg computation: 1.399944 - Energy 15126.048828
 
-Parallelized computation: 1.419945
-Sequential computation: 7.528596
-Speedup= 81.14 % 
+Parallelized computation: 11.139306
+Sequential computation: 61.096499
+Speedup = 548.48 % 
 
 
 nvprof OUTPUT
@@ -40,76 +40,78 @@ nvprof OUTPUT
 
 Parallel with for in kernel:
             Type  Time(%)      Time     Calls       Avg       Min       Max  Name
- GPU activities:   79.24%  958.07ms         4  239.52ms  21.981ms  409.61ms  compute_energies(energy_point_s*, ray_s*, int)
-                   20.61%  249.20ms         4  62.299ms  5.7203ms  110.36ms  [CUDA memcpy DtoH]
-                    0.15%  1.7798ms         4  444.94us  60.674us  787.29us  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s)
-                    0.00%  6.8170us         5  1.3630us  1.1840us  1.5040us  [CUDA memcpy HtoD]
-      API calls:   91.39%  1.21128s         9  134.59ms  7.1020us  521.18ms  cudaMemcpy
-                    8.48%  112.35ms         9  12.483ms  3.7900us  103.20ms  cudaMalloc
-                    0.10%  1.3001ms        46  28.262us     327ns  399.59us  cudaFree
-                    0.02%  315.15us       101  3.1200us     162ns  191.53us  cuDeviceGetAttribute
-                    0.01%  95.804us         8  11.975us  5.2630us  20.512us  cudaLaunchKernel
-                    0.01%  71.141us         1  71.141us  71.141us  71.141us  cuDeviceGetName
-                    0.00%  14.895us         1  14.895us  14.895us  14.895us  cuDeviceGetPCIBusId
-                    0.00%  2.1830us         3     727ns     248ns  1.5810us  cuDeviceGetCount
-                    0.00%     696ns         2     348ns     177ns     519ns  cuDeviceGet
-                    0.00%     468ns         1     468ns     468ns     468ns  cuDeviceTotalMem
-                    0.00%     380ns         1     380ns     380ns     380ns  cuDeviceGetUuid
-                    0.00%     358ns         1     358ns     358ns     358ns  cuModuleGetLoadingMode
+ GPU activities:   79.09%  7.63678s         4  1.90919s  180.08ms  3.44642s  compute_energies(energy_point_s*, int)
+                   20.74%  2.00299s         4  500.75ms  46.242ms  903.41ms  [CUDA memcpy DtoH]
+                    0.17%  16.234ms         4  4.0585ms  501.44us  6.3169ms  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s)
+                    0.00%  6.8160us         5  1.3630us  1.2160us  1.4720us  [CUDA memcpy HtoD]
+      API calls:   98.08%  9.65780s         8  1.20722s  10.680us  4.35654s  cudaMemcpy
+                    1.45%  142.50ms         1  142.50ms  142.50ms  142.50ms  cudaMemcpyToSymbol
+                    0.39%  38.202ms         8  4.7753ms  7.8290us  24.558ms  cudaMalloc
+                    0.08%  7.8598ms        45  174.66us     304ns  3.2073ms  cudaFree
+                    0.00%  363.41us       101  3.5980us     212ns  213.46us  cuDeviceGetAttribute
+                    0.00%  137.00us         8  17.125us  6.2240us  28.824us  cudaLaunchKernel
+                    0.00%  77.353us         1  77.353us  77.353us  77.353us  cuDeviceGetName
+                    0.00%  8.5680us         1  8.5680us  8.5680us  8.5680us  cuDeviceGetPCIBusId
+                    0.00%  2.1200us         3     706ns     396ns  1.2170us  cuDeviceGetCount
+                    0.00%  1.1030us         2     551ns     514ns     589ns  cuDeviceGet
+                    0.00%     792ns         1     792ns     792ns     792ns  cuModuleGetLoadingMode
+                    0.00%     694ns         1     694ns     694ns     694ns  cuDeviceTotalMem
+                    0.00%     365ns         1     365ns     365ns     365ns  cuDeviceGetUuid
 
    Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
-274.73ms  1.3120us                    -               -         -         -         -      444B  322.74MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-275.07ms  1.3120us                    -               -         -         -         -       20B  14.538MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-275.09ms  540.56us            (155 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [117]
-275.63ms  320.64ms            (155 1 1)      (1024 1 1)        42        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies(energy_point_s*, ray_s*, int) [118]
-596.27ms  78.129ms                    -               -         -         -         -  124.06MB  1.5507GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
-680.61ms  1.7280us                    -               -         -         -         -       20B  11.038MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-680.63ms  389.45us            (112 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [126]
-681.02ms  207.29ms            (112 1 1)      (1024 1 1)        42        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies(energy_point_s*, ray_s*, int) [127]
-888.31ms  57.918ms                    -               -         -         -         -  90.009MB  1.5177GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
-951.08ms  1.3760us                    -               -         -         -         -       40B  27.723MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-951.09ms  777.88us            (225 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [134]
-951.87ms  413.37ms            (225 1 1)      (1024 1 1)        42        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies(energy_point_s*, ray_s*, int) [135]
-1.36525s  111.02ms                    -               -         -         -         -  180.78MB  1.5901GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
-1.48341s  1.3760us                    -               -         -         -         -       60B  41.585MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-1.48343s  61.474us             (12 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [144]
-1.48349s  22.136ms             (12 1 1)      (1024 1 1)        42        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies(energy_point_s*, ray_s*, int) [145]
-1.50562s  5.8934ms                    -               -         -         -         -  9.3474MB  1.5489GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+288.67ms  1.3760us                    -               -         -         -         -      444B  307.73MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+289.97ms  1.3440us                    -               -         -         -         -       20B  14.192MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+290.00ms  4.3183ms           (1241 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [116]
+294.31ms  2.34402s           (1241 1 1)      (1024 1 1)        41        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies(energy_point_s*, int) [117]
+2.63834s  618.62ms                    -               -         -         -         -  997.88MB  1.5753GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+3.27851s  1.5040us                    -               -         -         -         -       20B  12.682MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+3.27854s  4.9740ms            (901 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [125]
+3.28351s  1.69832s            (901 1 1)      (1024 1 1)        41        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies(energy_point_s*, int) [126]
+4.98183s  448.92ms                    -               -         -         -         -  724.41MB  1.5759GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+5.47182s  1.4720us                    -               -         -         -         -       40B  25.915MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+5.47185s  6.3279ms           (1837 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [133]
+5.47818s  3.46933s           (1837 1 1)      (1024 1 1)        41        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies(energy_point_s*, int) [134]
+8.94751s  922.87ms                    -               -         -         -         -  1.4431GB  1.5637GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+9.91440s  1.4080us                    -               -         -         -         -       60B  40.640MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+9.91443s  501.85us             (95 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [143]
+9.91493s  183.97ms             (95 1 1)      (1024 1 1)        41        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies(energy_point_s*, int) [144]
+10.0989s  49.394ms                    -               -         -         -         -  75.675MB  1.4962GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]       1         7  [CUDA memcpy DtoH]
 
 Fully parallel:
             Type  Time(%)      Time     Calls       Avg       Min       Max  Name
- GPU activities:   79.43%  965.31ms         4  241.33ms  21.619ms  415.56ms  compute_energies_fully_parallel(energy_point_s*, ray_s*, int)
-                   20.43%  248.24ms         4  62.061ms  5.7124ms  111.16ms  [CUDA memcpy DtoH]
-                    0.15%  1.7787ms         4  444.68us  59.939us  780.74us  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s)
-                    0.00%  6.9130us         5  1.3820us  1.3120us  1.4410us  [CUDA memcpy HtoD]
-      API calls:   91.48%  1.21737s         9  135.26ms  6.8520us  527.96ms  cudaMemcpy
-                    8.38%  111.58ms         9  12.398ms  3.8490us  102.44ms  cudaMalloc
-                    0.10%  1.2682ms        46  27.568us     339ns  386.98us  cudaFree
-                    0.02%  315.03us       101  3.1190us     158ns  192.64us  cuDeviceGetAttribute
-                    0.01%  94.909us         8  11.863us  5.2990us  19.968us  cudaLaunchKernel
-                    0.01%  73.554us         1  73.554us  73.554us  73.554us  cuDeviceGetName
-                    0.00%  9.4780us         1  9.4780us  9.4780us  9.4780us  cuDeviceGetPCIBusId
-                    0.00%  2.0530us         3     684ns     251ns  1.5140us  cuDeviceGetCount
-                    0.00%     736ns         2     368ns     174ns     562ns  cuDeviceGet
-                    0.00%     422ns         1     422ns     422ns     422ns  cuDeviceTotalMem
-                    0.00%     324ns         1     324ns     324ns     324ns  cuModuleGetLoadingMode
-                    0.00%     280ns         1     280ns     280ns     280ns  cuDeviceGetUuid
+ GPU activities:   79.19%  7.67547s         4  1.91887s  189.54ms  3.46157s  compute_energies_fully_parallel(energy_point_s*, int)
+                   20.64%  2.00074s         4  500.19ms  46.398ms  902.88ms  [CUDA memcpy DtoH]
+                    0.17%  16.658ms         4  4.1646ms  535.68us  6.3218ms  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s)
+                    0.00%  7.5850us         5  1.5170us  1.2810us  1.7280us  [CUDA memcpy HtoD]
+      API calls:   98.14%  9.69459s         8  1.21182s  13.136us  4.37117s  cudaMemcpy
+                    1.33%  131.78ms         1  131.78ms  131.78ms  131.78ms  cudaMemcpyToSymbol
+                    0.45%  44.331ms         8  5.5413ms  13.603us  29.420ms  cudaMalloc
+                    0.07%  6.7452ms        45  149.89us     302ns  2.5652ms  cudaFree
+                    0.00%  457.47us         8  57.183us  9.0120us  132.19us  cudaLaunchKernel
+                    0.00%  343.96us       101  3.4050us     157ns  197.78us  cuDeviceGetAttribute
+                    0.00%  76.189us         1  76.189us  76.189us  76.189us  cuDeviceGetName
+                    0.00%  6.8330us         1  6.8330us  6.8330us  6.8330us  cuDeviceGetPCIBusId
+                    0.00%  1.9490us         3     649ns     259ns  1.2370us  cuDeviceGetCount
+                    0.00%  1.0430us         2     521ns     242ns     801ns  cuDeviceGet
+                    0.00%     813ns         1     813ns     813ns     813ns  cuModuleGetLoadingMode
+                    0.00%     796ns         1     796ns     796ns     796ns  cuDeviceTotalMem
+                    0.00%     588ns         1     588ns     588ns     588ns  cuDeviceGetUuid
 
    Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
-248.81ms  1.2480us                    -               -         -         -         -      444B  339.29MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-249.15ms  1.1840us                    -               -         -         -         -       20B  16.109MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-249.16ms  547.54us            (155 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [117]
-249.71ms  287.04ms          (15418 1 1)      (1024 1 1)        34        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies_fully_parallel(energy_point_s*, ray_s*, int) [118]
-536.76ms  76.040ms                    -               -         -         -         -  124.06MB  1.5933GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
-672.71ms  1.5050us                    -               -         -         -         -       20B  12.673MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-672.73ms  406.16us            (112 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [126]
-673.14ms  210.14ms          (11186 1 1)      (1024 1 1)        34        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies_fully_parallel(energy_point_s*, ray_s*, int) [127]
-883.28ms  54.909ms                    -               -         -         -         -  90.009MB  1.6008GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
-983.44ms  1.4070us                    -               -         -         -         -       40B  27.112MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-983.45ms  773.41us            (225 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [134]
-984.23ms  422.00ms          (22466 1 1)      (1024 1 1)        34        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies_fully_parallel(energy_point_s*, ray_s*, int) [135]
-1.40623s  110.54ms                    -               -         -         -         -  180.78MB  1.5970GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
-1.60545s  1.4720us                    -               -         -         -         -       60B  38.873MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
-1.60547s  68.676us             (12 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [144]
-1.60554s  21.971ms           (1162 1 1)      (1024 1 1)        34        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies_fully_parallel(energy_point_s*, ray_s*, int) [145]
-1.62751s  5.8851ms                    -               -         -         -         -  9.3474MB  1.5511GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+206.86ms  1.4080us                    -               -         -         -         -      444B  300.73MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+209.46ms  1.3440us                    -               -         -         -         -       20B  14.192MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+209.51ms  4.3183ms           (1241 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [116]
+213.83ms  2.38575s         (124008 1 1)      (1024 1 1)        34        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies_fully_parallel(energy_point_s*, int) [117]
+2.59958s  609.31ms                    -               -         -         -         -  997.88MB  1.5993GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+3.64698s  1.6000us                    -               -         -         -         -       20B  11.921MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+3.64709s  5.5553ms            (901 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [125]
+3.65265s  1.71448s          (90024 1 1)      (1024 1 1)        34        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies_fully_parallel(energy_point_s*, int) [126]
+5.36713s  616.89ms                    -               -         -         -         -  724.41MB  1.1468GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+6.32937s  1.5360us                    -               -         -         -         -       40B  24.835MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+6.32940s  6.3234ms           (1837 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [133]
+6.33573s  3.48478s         (183636 1 1)      (1024 1 1)        34        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies_fully_parallel(energy_point_s*, int) [134]
+9.82052s  903.34ms                    -               -         -         -         -  1.4431GB  1.5975GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]
+11.4193s  1.6960us                    -               -         -         -         -       60B  33.738MB/s    Pageable      Device  NVIDIA GeForce          1         7  [CUDA memcpy HtoD]
+11.4193s  516.03us             (95 1 1)      (1024 1 1)        18        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  initialize_points_rectangles(energy_point_s*, rectangle_s*, int, float, float, int, point3d_s) [143]
+11.4198s  182.87ms           (9405 1 1)      (1024 1 1)        34        0B        0B         -           -           -           -  NVIDIA GeForce          1         7  compute_energies_fully_parallel(energy_point_s*, int) [144]
+11.6027s  48.883ms                    -               -         -         -         -  75.675MB  1.5118GB/s      Device    Pageable  NVIDIA GeForce          1         7  [CUDA memcpy DtoH]        1         7  [CUDA memcpy DtoH]
