@@ -1,20 +1,20 @@
 ########################################################################################### SEQUENTIAL
 
 PARALLEL:
-Raggio nel cubo 0 - Point gen: 0.060213 - Eneg computation: 0.105807 - Energy 2631.425049
-Raggio nel cubo 3 - Point gen: 0.027786 - Eneg computation: 0.077016 - Energy 2276.659180
-Raggio nel cubo 5 - Point gen: 0.086142 - Eneg computation: 0.151771 - Energy 7147.545898
-Raggio nel cubo 9 - Point gen: 0.002760 - Eneg computation: 0.015236 - Energy 668.748474
+Raggio nel cubo 0 - Point gen: 0.054066 - Eneg computation: 0.105670 - Energy 2631.425049
+Raggio nel cubo 3 - Point gen: 0.032783 - Eneg computation: 0.072380 - Energy 2276.659180
+Raggio nel cubo 5 - Point gen: 0.063305 - Eneg computation: 0.151860 - Energy 7147.545898
+Raggio nel cubo 9 - Point gen: 0.002854 - Eneg computation: 0.012673 - Energy 668.748474
 
 SEQUENTIAL:
-Raggio nel cubo 0 - Point gen: 0.018040 - Eneg computation: 0.750036 - Energy 2631.424561
-Raggio nel cubo 3 - Point gen: 0.011368 - Eneg computation: 0.474535 - Energy 2276.658691
-Raggio nel cubo 5 - Point gen: 0.045291 - Eneg computation: 0.985717 - Energy 7147.545410
-Raggio nel cubo 9 - Point gen: 0.001885 - Eneg computation: 0.080278 - Energy 668.748413
+Raggio nel cubo 0 - Point gen: 0.016586 - Eneg computation: 0.636768 - Energy 2631.424561
+Raggio nel cubo 3 - Point gen: 0.010178 - Eneg computation: 0.434546 - Energy 2276.658691
+Raggio nel cubo 5 - Point gen: 0.032125 - Eneg computation: 0.926504 - Energy 7147.545410
+Raggio nel cubo 9 - Point gen: 0.001831 - Eneg computation: 0.065443 - Energy 668.748413
 
-Parallelized computation: 0.527749
-Sequential computation: 2.367299
-Speedup = 448.57 % 
+Parallelized computation: 0.496625
+Sequential computation: 2.124103
+Speedup = 427.71 % 
 
 
 ==41503== Profiling result:
@@ -58,20 +58,20 @@ Speedup = 448.57 %
 ########################################################################################### PARALLEL WMEMCPY
 
 PARALLEL:
-Raggio nel cubo 0 - Point gen: 0.046252 - Eneg computation: 0.107478 - Energy 2631.425049
-Raggio nel cubo 3 - Point gen: 0.038287 - Eneg computation: 0.072492 - Energy 2276.659180
-Raggio nel cubo 5 - Point gen: 0.144264 - Eneg computation: 0.267721 - Energy 7147.545898
-Raggio nel cubo 9 - Point gen: 0.016637 - Eneg computation: 0.037222 - Energy 668.748474
+Raggio nel cubo 0 - Point gen: 0.043605 - Eneg computation: 0.106820 - Energy 2631.425049
+Raggio nel cubo 3 - Point gen: 0.043633 - Eneg computation: 0.071980 - Energy 2276.659180
+Raggio nel cubo 5 - Point gen: 0.127650 - Eneg computation: 0.267952 - Energy 7147.545898
+Raggio nel cubo 9 - Point gen: 0.018361 - Eneg computation: 0.035744 - Energy 668.748474
 
 SEQUENTIAL:
-Raggio nel cubo 0 - Point gen: 0.020139 - Eneg computation: 0.701551 - Energy 2631.424561
-Raggio nel cubo 3 - Point gen: 0.009421 - Eneg computation: 0.592361 - Energy 2276.658691
-Raggio nel cubo 5 - Point gen: 0.031713 - Eneg computation: 0.987666 - Energy 7147.545410
-Raggio nel cubo 9 - Point gen: 0.001783 - Eneg computation: 0.068370 - Energy 668.748413
+Raggio nel cubo 0 - Point gen: 0.019464 - Eneg computation: 0.650177 - Energy 2631.424561
+Raggio nel cubo 3 - Point gen: 0.009996 - Eneg computation: 0.433915 - Energy 2276.658691
+Raggio nel cubo 5 - Point gen: 0.030193 - Eneg computation: 0.936950 - Energy 7147.545410
+Raggio nel cubo 9 - Point gen: 0.001805 - Eneg computation: 0.065659 - Energy 668.748413
 
-Parallelized computation: 0.732514
-Sequential computation: 2.413143
-Speedup = 329.43 % 
+Parallelized computation: 0.716658
+Sequential computation: 2.148279
+Speedup = 299.76 % 
 
 ==39691== Profiling result:
             Type  Time(%)      Time     Calls       Avg       Min       Max  Name
