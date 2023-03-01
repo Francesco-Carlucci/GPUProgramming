@@ -63,5 +63,6 @@ int read_input(char* inpath,cube cubes[],point3d* CUBE_GLOBAL_MAX, point3d* CUBE
 void write_on_file(FILE *fout, cube *cubes, int cube_number, ray ray_traj);
 energy_point* generate_points_in_rect_parallel(cube *curr_cube, point3d resolution);
 int generate_points_in_rect(point2d p1,point2d p2,point3d resolution,energy_point* points,int minz,int maxz,int offset);
+void generate_points_by_resolution_parallel_wmemcpy(cube *curr_cube, point3d resolution);
 
 #endif

@@ -402,6 +402,38 @@ void generate_points_by_resolution_parallel(cube *curr_cube, point3d resolution,
 }
 
 
+/* Generates the points inside a cube with a given resolution, it directly returns the pointer to the points vector in the GPU so that we don't need to
+   copy it back to host and again to the GPU */
+void generate_points_by_resolution_parallel_wmemcpy(cube *curr_cube, point3d resolution) {
+
+    // data structures used
+    int dx = resolution.x;
+    int dy = resolution.y;
+    int dz = resolution.z;
+    int x_amt = (curr_cube->max.x - curr_cube->min.x) / dx;
+    int y_amt = (curr_cube->max.y - curr_cube->min.y) / dy;
+    int z_amt = (curr_cube->max.z - curr_cube->min.z) / dz;
+    curr_cube->point_amt = x_amt*y_amt*z_amt;
+    point2d *dev_limits;
+    energy_point *dev_points;
+    curr_cube->points = (energy_point *) malloc(curr_cube->point_amt * sizeof(energy_point));  //nvcc vuole il cast
+
+    // blocks needed to cover all possible points
+    int nblocks = (curr_cube->point_amt)/MAX_THREADS+1;
+    // allocation of data structures for GPU
+    cudaMalloc( (void**) &dev_limits, curr_cube->N * sizeof(point2d));
+    cudaMalloc( (void**) &dev_points, curr_cube->point_amt * sizeof(energy_point));
+    // copy of limits array
+    cudaMemcpy(dev_limits, curr_cube->limits, curr_cube->N * sizeof(point2d), cudaMemcpyHostToDevice);
+    initialize_points<<<nblocks,MAX_THREADS>>>(dev_limits, dev_points, x_amt, y_amt, z_amt, curr_cube->min.x, curr_cube->min.y, curr_cube->min.z, dx, dy, dz, curr_cube->N, curr_cube->max.z);
+    cudaMemcpy(curr_cube->points, dev_points, curr_cube->point_amt * sizeof(energy_point), cudaMemcpyDeviceToHost);
+    // free structures
+    cudaFree(dev_limits);
+
+    //return *dev_points;
+}
+
+
 void free_cube(cube *cu) {
     if(cu->points!=NULL){
         free(cu->points);

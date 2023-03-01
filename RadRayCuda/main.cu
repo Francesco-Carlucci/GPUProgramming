@@ -3,12 +3,13 @@
 #include <time.h>
 
 // define, if set to 1 it enables the comparison btwn parallel and serial version
-#define COMPARE 0
+#define COMPARE 1
 
 // define used to select the point generation algorithm
-#define POINT_GEN_PAR_RECT
+//#define POINT_GEN_PAR_RECT
 //#define POINT_GEN_PAR
-//#define POINT_GEN_SEQ
+//#define POINT_GEN_PAR_WMEMCPY
+#define POINT_GEN_SEQ
 
 // define used to select the energies computation algorithm
 //#define ENEG_FULLY_PAR
@@ -109,7 +110,7 @@ int main() {  //pass file name and parameters through command line
     //float ray_dist = distance(ray_traj.start, ray_traj.end);
     point3d curr_ray_pos;
     float point_ray_dist;
-    point3d res = {20,20,20};
+    point3d res = {15,15,15};
     //float dist_threshold = 10000;       ///:/=max_x_ray
 
     float cube_energy_sequential, cube_energy_parallel;
@@ -177,6 +178,12 @@ int main() {  //pass file name and parameters through command line
             generate_points_by_resolution_parallel(&(cubes[cube_index]), res, &dev_point_ens);
 #endif
 
+#ifdef POINT_GEN_PAR_WMEMCPY
+            generate_points_by_resolution_parallel_wmemcpy(&(cubes[cube_index]), res);
+            cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
+            cudaMemcpy((void*) dev_point_ens, (void*) cubes[cube_index].points, cubes[cube_index].point_amt *sizeof(energy_point), cudaMemcpyHostToDevice);
+#endif
+
 #ifdef POINT_GEN_SEQ
             generate_points_by_resolution(&cubes[cube_index], res);
             cudaMalloc((void**)&dev_point_ens,cubes[cube_index].point_amt *sizeof(energy_point));
@@ -224,7 +231,7 @@ int main() {  //pass file name and parameters through command line
     clock_t end_par = clock();
 #endif
 
-    write_on_file(fout_par, cubes, cube_number, ray_traj);
+    //write_on_file(fout_par, cubes, cube_number, ray_traj);
 
 
 
@@ -271,6 +278,10 @@ int main() {  //pass file name and parameters through command line
             generate_points_by_resolution(&cubes[cube_index], res);
 #endif
 
+#ifdef POINT_GEN_PAR_WMEMCPY
+            generate_points_by_resolution(&cubes[cube_index], res);
+#endif
+
 #ifdef POINT_GEN_SEQ
             generate_points_by_resolution(&cubes[cube_index], res);
 #endif
@@ -308,7 +319,7 @@ int main() {  //pass file name and parameters through command line
     clock_t end_seq = clock();
 
     // writing on file sequential informations
-    write_on_file(fout_seq, cubes, cube_number, ray_traj);
+    //write_on_file(fout_seq, cubes, cube_number, ray_traj);
 
     double sequential_time = (double) (end_seq - begin_seq) / CLOCKS_PER_SEC;
     double parallel_time =(double) (end_par - begin_par) / CLOCKS_PER_SEC;
